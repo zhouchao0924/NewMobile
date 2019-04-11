@@ -1,7 +1,7 @@
 .vs/
 Intermediate/
 Saved/
-Binaries/
+Binaries/*
 Build/
 DerivedDataCache/
 Plugins/BuildingSDK/Source/ThirdParty/BuildingSDKLibrary/Thridparty
@@ -9,3 +9,20 @@ Plugins/BuildingSDK/Source/ThirdParty/BuildingSDKLibrary/x64
 Plugins/DrDataEx/Source/ThirdParty
 
 
+Plugins/DrDataEx/Binaries/Win64/UE4Editor-DrDataEx.dll
+Plugins/DrDataEx/Binaries/Win64/UE4Editor-DrDataEx-Win64-DebugGame.pdb
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor-BusinessLayer.dll
+Plugins/BuildingSDK/Binaries/Win64/UE4Editor-BuildingSDK.pdb
+Plugins/BuildingSDK/Binaries/Win64/UE4Editor-BuildingSDK.dll
+Plugins/DrDataEx/Binaries/Win64/UE4Editor-Win64-DebugGame.modules
+Plugins/DrDataEx/Binaries/Win64/UE4Editor-DrDataEx.pdb
+Plugins/BuildingSDK/Binaries/Win64/UE4Editor-BuildingSDK-Win64-DebugGame.pdb
+Plugins/BuildingSDK/Binaries/Win64/UE4Editor-BuildingSDK-Win64-DebugGame.dll
+Plugins/DrDataEx/Binaries/Win64/UE4Editor.modules
+Plugins/DrDataEx/Binaries/Win64/UE4Editor-DrDataEx-Win64-DebugGame.dll
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor.modules
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor-BusinessLayer-Win64-DebugGame.dll
+Plugins/BuildingSDK/Binaries/Win64/UE4Editor-Win64-DebugGame.modules
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor-Win64-DebugGame.modules
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor-BusinessLayer.pdb
+Plugins/BusinessLayer/Binaries/Win64/UE4Editor-BusinessLayer-Win64-DebugGame.pdb
