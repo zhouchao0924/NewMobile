@@ -12,7 +12,7 @@ class ABuildingActor : public ADRActor
 public:
 	UFUNCTION(BlueprintCallable)
 	void Update(UBuildingData *Data);
-	EVisibleChannel GetChannel() override { return bTopCeil? EVisibleChannel::EBuildingTopChannel :EVisibleChannel::EBuildingStructChannel; }
+	EVisibleChannel GetChannel() override { return  bTopCeil? EVisibleChannel::EBuildingTopChannel :EVisibleChannel::EBuildingStructChannel; }
 public:
 	UPROPERTY(Transient)
 	UBuildingData *BuildingData;

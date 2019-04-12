@@ -19,7 +19,7 @@ class ADRActor : public AActor
 	GENERATED_UCLASS_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	virtual EVisibleChannel GetChannel() { return EVisibleChannel::EUnkownChannel; }
+		virtual EVisibleChannel GetChannel() { return EVisibleChannel::EUnkownChannel; }
 };
 
 

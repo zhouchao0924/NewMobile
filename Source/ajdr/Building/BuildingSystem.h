@@ -38,6 +38,69 @@ struct FObjectInfo
 	TArray<class ADRActor *>  Actorts;
 };
 
+USTRUCT(BlueprintType)
+struct FGlobalLight
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	UPROPERTY(BlueprintReadWrite)
+		int32 ID;
+	UPROPERTY(BlueprintReadWrite)
+		int32 OriginalDataID;
+};
+
+USTRUCT(BlueprintType)
+struct FDirectionLight : public FGlobalLight
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	UPROPERTY(BlueprintReadWrite)
+		FRotator Rotation;
+	UPROPERTY(BlueprintReadWrite)
+		FLinearColor Color;
+	UPROPERTY(BlueprintReadWrite)
+		float Intensity;
+};
+
+USTRUCT(BlueprintType)
+struct FDRSkyLight : public FGlobalLight
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	UPROPERTY(BlueprintReadWrite)
+		float Intensity;
+	UPROPERTY(BlueprintReadWrite)
+		FLinearColor Color;
+	UPROPERTY(BlueprintReadWrite)
+		float Angle;
+};
+
+
+USTRUCT(BlueprintType)
+struct FPostProcess
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	UPROPERTY(BlueprintReadWrite)
+		int32 ID;
+	UPROPERTY(BlueprintReadWrite)
+		float Saturation;
+	UPROPERTY(BlueprintReadWrite)
+		FVector Constrast;
+	UPROPERTY(BlueprintReadWrite)
+		float BloomIntensity;
+	UPROPERTY(BlueprintReadWrite)
+		float AmbientOcclusion;
+	UPROPERTY(BlueprintReadWrite)
+		float AmbientOcclusionRadius;
+	UPROPERTY(BlueprintReadWrite)
+		float CrushHighLights;
+	UPROPERTY(BlueprintReadWrite)
+		float HaloSize;
+	UPROPERTY(BlueprintReadWrite)
+		int32 OriginalDataID;
+};
+
 class IBuildingSDK;
 
 struct FSlateContext
@@ -65,7 +128,7 @@ class UBuildingSystem :public UObject, public ISuiteListener, public FTickableGa
 	GENERATED_UCLASS_BODY()
 public:
 	UFUNCTION(BlueprintCallable, Category = "Suite")
-	void LoadFile(const FString &InFilename);
+	bool LoadFile(const FString &InFilename);
 	
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	void SaveFile(const FString &InFilename);
@@ -107,6 +170,18 @@ public:
 	int32 AddDoor(int32 WallID, const FVector2D &Location, float Width, float Height, float zPos = 0);
 
 	UFUNCTION(BlueprintCallable, Category = "Suite")
+	int32 AddPointLight(const FVector &Location, float SourceRadius, float SoftSourceRadius, float SourceLength, float Intensity, FLinearColor LightColor, bool bCastShadow);
+	
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	int32 AddSpotLight(const FVector &Location, const FRotator &Rotationn, float AttenuationRadius, float SourceRadius, float SoftSourceRadius, float SourceLength, float InnerConeAngle, float OuterConeAngle, float Intensity, FLinearColor LightColor, bool bCastShadow);
+
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetSkyLight(const FDRSkyLight & Sky,const FDirectionLight & Direction);
+
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetPostProcess(const FPostProcess & Post);
+
+	UFUNCTION(BlueprintCallable, Category = "Suite")
 	int32  FindCloseWall(const FVector2D &Location, float Width, FVector2D &BestLoc,float Tolerance = -1.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "Suite")
@@ -116,7 +191,7 @@ public:
 	void SetChannelVisbile(EVisibleChannel Channel, bool bVisible);
 
 	//UFUNCTION(BlueprintCallable, Category = "Suite")
-	int32 GetAllObjects(IObject** &ppOutObject, EObjectType InClass = EUnkownObject);
+	int32 GetAllObjects(IObject** &ppOutObject, EObjectType InClass = EUnkownObject,bool bIncludeDeriveType=true);
 
 	void LoadingConfig(FBuildingConfig * Config);
 	UFUNCTION(BlueprintCallable, Category = "Suite")
@@ -133,6 +208,8 @@ public:
 
 	int	HitTestMinMax(const FVector2D &Min, const FVector2D &Max, int32 *&pResults);
 
+	IValue* GetProperty(ObjectID ID, const char *PropertyName);
+
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	int32 GetRoomByLocation(const FVector2D &Loc);
 
@@ -140,8 +217,9 @@ public:
 	static UPrimitiveComponent *HitTestPrimitiveByCursor(UObject *WorldContextObject);
 
 	bool GetWallVector(int32 WallID, FVector2D &P0, FVector2D &P1, FVector2D &Right);
-
-	void  AddVirtualWall(ObjectID StartCorner, ObjectID EndCorner);
+	
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void  AddVirtualWall(int32 StartCorner, int32 EndCorner);
 
 	int32 GetConnectWalls(int32 objID, int32 *&pConnectedWalls);
 
@@ -177,6 +255,7 @@ protected:
 	int32 FindHostWorld(UWorld *World);
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
 	ADRActor *SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
+	ADRActor *SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
 	FString						Filename;
@@ -194,5 +273,6 @@ public:
 	ISuite						*Suite;
 	FSlateContext				SlateContext;
 	static	IBuildingSDK		*BuildingSDK;
+	//UClass						*PointLightClass;
 };
 

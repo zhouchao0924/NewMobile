@@ -15,12 +15,14 @@
 #include "Math/kVector2D.h"
 #include <vector>
 #include "SceneViewport.h"
+#include "Public/UObject/ConstructorHelpers.h"
+#include "DRGameMode.h"
 
 
 IBuildingSDK *UBuildingSystem::BuildingSDK = nullptr;
 
 IBuildingSDK *UBuildingSystem::GetBuildingSDK()
-        {
+{
 	if (!BuildingSDK)
 	{
 		FBuildingSDKModule &SDKModule = FModuleManager::LoadModuleChecked<FBuildingSDKModule>(FName("BuildingSDK"));
@@ -43,9 +45,11 @@ UBuildingSystem::UBuildingSystem(const FObjectInitializer &ObjectIntializer)
 	: Super(ObjectIntializer)
 	, Suite(nullptr)
 	, Visitor(nullptr)
-{
-}
 
+{
+	/*static ConstructorHelpers::FClassFinder<AActor> PointLight(TEXT("Blueprint'/Game/Light/Editor_PointLight_Base.Editor_PointLight_Base_C'"));
+	UClass *PointLightClass = PointLight.Class;*/
+}
 
 UBuildingSystem *UBuildingSystem::LoadNewSuite(UObject *Outer, const FString &InFilename)
 {
@@ -74,13 +78,17 @@ UBuildingSystem *UBuildingSystem::CreateNewSuite(UObject *Outer, const FString &
 	return NewSuite;
 }
 
-void UBuildingSystem::LoadFile(const FString &InFilename)
+bool UBuildingSystem::LoadFile(const FString &InFilename)
 {
+	if (!IFileManager::Get().FileExists(*InFilename))
+	{
+		return false;
+	}
 	if (Suite)
 	{
 		ClearSuite();
 	}
-	 
+
 	const char *strFilename = TCHAR_TO_ANSI(*InFilename);
 	IBuildingSDK *pSDK = GetBuildingSDK();
 	if (pSDK)
@@ -91,8 +99,10 @@ void UBuildingSystem::LoadFile(const FString &InFilename)
 			Filename = InFilename;
 			Suite->SetListener(this);
 			LoadObjInfo();
+			return true;
 		}
 	}
+	return false;
 }
 
 void UBuildingSystem::SaveFile(const FString &InFilename)
@@ -186,6 +196,7 @@ void UBuildingSystem::RemoveFromWorld(UObject *WorldContextObject)
 					}
 				}
 			}
+			HostWorlds.Remove(MyWorld);
 		}
 	}
 }
@@ -314,6 +325,8 @@ void UBuildingSystem::OnUpdateObject(IObject *RawObj, unsigned int ChannelMask)
 	{
 		int32 ObjID = RawObj->GetID();
 		FObjectInfo *ObjInfo = ObjMap.Find(ObjID);
+		EObjectType TestType = RawObj->GetType();
+		EChannelMask TestChannel = (EChannelMask)ChannelMask;
 		if (ObjInfo)
 		{
 			for(int32 i = 0; i<ObjInfo->Actorts.Num(); ++i)
@@ -324,10 +337,60 @@ void UBuildingSystem::OnUpdateObject(IObject *RawObj, unsigned int ChannelMask)
 					Actor->Update(ObjInfo->Data);
 				}
 			}
+			if ( RawObj->GetType() == EObjectType::EModelInstance)
+			{
+				int num = ObjInfo->Actorts.Num();
+				for (int i = 0; i < num; ++i)
+				{
+					AModelFileActor *Model =  Cast<AModelFileActor>(ObjInfo->Actorts[i]);
+					if (Model)
+					{
+						Model->Update(ObjInfo->Data);
+					}
+				}
+			}
+			if (RawObj->GetType() == EObjectType::EFloorPlane)
+			{
+				int num = ObjInfo->Actorts.Num();
+				for (int i = 0; i < num; ++i)
+				{
+					ABuildingActor *Model = Cast<ABuildingActor>(ObjInfo->Actorts[i]);
+					if (Model)
+					{
+						Model->Update(ObjInfo->Data);
+					}
+				}
+			}
+			if (RawObj->GetType() == EObjectType::EDoorHole
+				|| RawObj->GetType() == EObjectType::EWindow)
+			{
+
+				ISuite * _IS = ObjInfo->Data->GetSuite();
+				if (_IS)
+				{
+					IValue & Value = _IS->GetProperty(ObjID, "LinkObjects");
+					kArray<int>  LinkObjects = Value.IntArrayValue();
+					for (int i = 0; i < LinkObjects.size(); ++i)
+					{
+						FObjectInfo * _ObjInfo = ObjMap.Find(LinkObjects[i]);
+						if (_ObjInfo)
+						{
+							AModelFileActor *Model = Cast<AModelFileActor>(_ObjInfo->Actorts[i]);
+							if (Model)
+							{
+								Model->Update(ObjInfo->Data);
+								Model->Update(_ObjInfo->Data);
+							}
+						}
+					}
+				}
+
+			}
 		}
 	}
 }
 
+//根据Object的Type生成对应的部件
 ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInfo)
 {
 	ADRActor *pActor = nullptr;
@@ -335,11 +398,6 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 
 	if (!pActor)
 	{
-		int nn = Obj->GetType();
-		if (!nn==0)
-		{
-			int mm = Obj->GetType();
-		}
 		if (Obj->IsA(EPrimitive))
 		{
 			pActor = SpawnPrimitiveComponent(World, ObjInfo, Obj->GetType());
@@ -347,6 +405,10 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 		else if (Obj->IsA(EModelInstance))
 		{
 			pActor = SpawnModelComponent(World, ObjInfo);
+		}
+		else if (Obj->IsA(EPointLight))//ELight,ESpotLight,ESkyLight,EPostProcess,	
+		{
+			pActor = SpawnLightComponent(World, ObjInfo);
 		}
 	}
 
@@ -357,6 +419,7 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 	return pActor;
 }
 
+//生成ModelFile模型
 ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
 	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
@@ -368,6 +431,7 @@ ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &Ob
 	return Actor;
 }
 
+//生成户型组件
 ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType)
 {
 	ABuildingActor *Actor = (ABuildingActor *)MyWorld->SpawnActor(ABuildingActor::StaticClass(), &FTransform::Identity);
@@ -386,16 +450,44 @@ ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo
 	return Actor;
 }
 
+//生成灯光组件
+ADRActor * UBuildingSystem::SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
+{
+	UBuildingData *Data = ObjInfo.Data;
+	FVector Location = Data->GetVector(TEXT("Location"));
+	float SourceRadius = Data->GetFloat(TEXT("SourceRadius"));
+	float SoftSourceRadius = Data->GetFloat(TEXT("SoftSourceRadius"));
+	float  SourceLength = Data->GetFloat(TEXT("SourceLength"));
+	float  Intensity = Data->GetFloat(TEXT("Intensity"));
+	FLinearColor LightColor;
+	bool bCastShadow = Data->GetBool(TEXT("bCastShadow"));
+
+	ADRGameMode *MyGame = Cast<ADRGameMode>(MyWorld->GetAuthGameMode());
+
+	UBuildingSystem *BuildingSystem = MyGame->GetBuildingSystem(MyWorld);
+
+	BuildingSystem->AddPointLight(Location, SourceRadius, SoftSourceRadius, SourceLength, Intensity, LightColor, bCastShadow);
+
+	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
+	if (Actor)
+	{
+		Actor->Update(ObjInfo.Data);
+		ObjInfo.Actorts.Add(Actor);
+	}
+	return Actor;
+	
+}
+
 bool UBuildingSystem::IsFree(int32 ObjID)
 {
 	return Suite ? Suite->IsFree(ObjID) : false;
 }
 
-int32 UBuildingSystem::GetAllObjects(IObject** &ppOutObject, EObjectType InClass)
+int32 UBuildingSystem::GetAllObjects(IObject** &ppOutObject, EObjectType InClass,bool bIncludeDeriveType)
 {
 	if (Suite)
 	{
-		return Suite->GetAllObjects(ppOutObject, InClass);
+		return Suite->GetAllObjects(ppOutObject, InClass, bIncludeDeriveType);
 	}
 	return 0;
 }
@@ -537,6 +629,73 @@ int32 UBuildingSystem::AddDoor(int32 WallID, const FVector2D &Location, float Wi
 	return INVALID_OBJID;
 }
 
+int32 UBuildingSystem::AddPointLight(const FVector &Location, float SourceRadius, float SoftSourceRadius, float SourceLength, float Intensity, FLinearColor LightColor, bool bCastShadow)
+{
+	if (Suite)
+	{
+		kVector3D Loc = ToBuildingVector(Location);
+		kColor Color = ToBuildingColor(LightColor);
+		return (int32)Suite->AddPointLight(Loc, SourceRadius, SoftSourceRadius, SourceLength, Intensity, Color, bCastShadow);
+	}
+	return INVALID_OBJID;
+}
+
+int32 UBuildingSystem::AddSpotLight(const FVector &Location, const FRotator &Rotationn, float AttenuationRadius, float SourceRadius, float SoftSourceRadius, float SourceLength, float InnerConeAngle, float OuterConeAngle, float Intensity, FLinearColor LightColor, bool bCastShadow)\
+{
+	if (Suite)
+	{
+		kVector3D Loc = ToBuildingVector(Location);
+		kRotation Rot = ToBuildingRotation(Rotationn);
+		kColor Color =  ToBuildingColor(LightColor);
+		return (int32)Suite->AddSpotLight(Loc, Rot, AttenuationRadius, SourceRadius, SoftSourceRadius, SourceLength, InnerConeAngle, OuterConeAngle, Intensity, Color, bCastShadow);
+	}
+	return INVALID_OBJID;
+}
+
+void UBuildingSystem::SetSkyLight(const FDRSkyLight & Sky, const FDirectionLight & Direction)
+{
+	if (Suite)
+	{
+		ObjectID ConfigID = Suite->GetConfig();
+		IValue & _Sky = Suite->GetProperty(ConfigID, "SkyLight");
+		int32 SkyID = _Sky.IntValue();
+		UBuildingData * SkyData = GetData(SkyID);
+		if (SkyData)
+		{
+			//(FDRSkyLight&*)(&Sky)->ID = SkyID;
+			//(FDirectionLight*)(&Direction)->ID = SkyID;
+			//Direction
+			SkyData->SetVector(TEXT("DirectionLightRotation"), Direction.Rotation.Vector());
+			SkyData->SetVector(TEXT("DirectionLightColor"), FVector(Direction.Color.R, Direction.Color.G, Direction.Color.B));
+			SkyData->SetFloat(TEXT("DirectionLightIntensity"), Direction.Intensity);
+			//Sky
+			SkyData->SetFloat(TEXT("SkyLightIntensity"), Sky.Intensity);
+			SkyData->SetFloat(TEXT("SkyLightAngle"), Sky.Angle);
+			SkyData->SetVector(TEXT("SkyLightColor"), FVector(Sky.Color.R, Sky.Color.G, Sky.Color.B));
+		}
+	}
+}
+
+void UBuildingSystem::SetPostProcess(const FPostProcess & Post)
+{
+	if (Suite)
+	{
+		ObjectID ConfigID = Suite->GetConfig();
+		IValue & _Pose =  Suite->GetProperty(ConfigID,"PostProcess");
+		int32 PostID = _Pose.IntValue();
+		UBuildingData * PostData =  GetData(PostID);
+		if (PostData)
+		{
+			//Post.ID = PostID;
+			PostData->SetFloat(TEXT("Saturation"), Post.Saturation);
+			//PostData->SetFloat(TEXT("Constrast"), Post.Constrast);
+			PostData->SetFloat(TEXT("BloomIntensity"), Post.BloomIntensity);
+			PostData->SetFloat(TEXT("AmbientOcclusion"), Post.AmbientOcclusion);
+			PostData->SetFloat(TEXT("AmbientOcclusionRadius"), Post.AmbientOcclusionRadius);
+		}
+	}
+}
+
 int32 UBuildingSystem::FindCloseWall(const FVector2D & Location, float Width, FVector2D & BestLoc, float Tolerance)
 {
 	if (Suite)
@@ -651,22 +810,34 @@ bool UBuildingSystem::Move(ObjectID objID, const FVector2D &DeltaMove)
 
 void UBuildingSystem::LoadingConfig(FBuildingConfig * Config)
 {
-	ObjectID ConfigID = GetSuite()->GetConfig();
-	GetSuite()->SetProperty(ConfigID, "WallMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->WallMaterial->GetPathName())));
-	GetSuite()->SetProperty(ConfigID, "WallMaterialType", &GetValueFactory()->Create(Config->WallMaterialType));
-	GetSuite()->SetProperty(ConfigID, "FloorMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->FloorMaterial->GetPathName())));
-	GetSuite()->SetProperty(ConfigID, "FloorMaterialType", &GetValueFactory()->Create(Config->FloorMaterialType));
-	GetSuite()->SetProperty(ConfigID, "CeilMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->WallMaterial->GetPathName())));
-	GetSuite()->SetProperty(ConfigID, "CeilMaterialType", &GetValueFactory()->Create(Config->CeilMaterialType));
-	GetSuite()->SetProperty(ConfigID, "bCeilVisible", &GetValueFactory()->Create(Config->bCeilVisible));
-	GetSuite()->SetProperty(ConfigID, "Tolerance", &GetValueFactory()->Create(Config->Tolerance));
-	//GetSuite()->SetProperty(ConfigID, "SkirtingCeil", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingCeil)));
-	//GetSuite()->SetProperty(ConfigID, "SkirtingCeilExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingCeilExt)));
-	//GetSuite()->SetProperty(ConfigID, "SkirtingFloor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingFloor)));
-	//GetSuite()->SetProperty(ConfigID, "SkirtingFloorExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingFloorExt)));
-	GetSuite()->SetProperty(ConfigID, "DefaultDoor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoor)));
-	GetSuite()->SetProperty(ConfigID, "DefaultDoorFrame", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoorFrame)));
-	GetSuite()->SetProperty(ConfigID, "DefaultWindow", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultWindow)));
+	if (!Suite)
+	{
+		IBuildingSDK *pSDK = GetBuildingSDK();
+		if (pSDK)
+		{
+			Suite = pSDK->CreateSuite();
+			Suite->SetListener(this);
+		}
+	}
+	if (Suite)
+	{
+		ObjectID ConfigID = Suite->GetConfig();
+		Suite->SetProperty(ConfigID, "WallMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->WallMaterial->GetPathName())));
+		Suite->SetProperty(ConfigID, "WallMaterialType", &GetValueFactory()->Create(Config->WallMaterialType));
+		Suite->SetProperty(ConfigID, "FloorMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->FloorMaterial->GetPathName())));
+		Suite->SetProperty(ConfigID, "FloorMaterialType", &GetValueFactory()->Create(Config->FloorMaterialType));
+		Suite->SetProperty(ConfigID, "CeilMaterial", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->WallMaterial->GetPathName())));
+		Suite->SetProperty(ConfigID, "CeilMaterialType", &GetValueFactory()->Create(Config->CeilMaterialType));
+		Suite->SetProperty(ConfigID, "bCeilVisible", &GetValueFactory()->Create(Config->bCeilVisible));
+		Suite->SetProperty(ConfigID, "Tolerance", &GetValueFactory()->Create(Config->Tolerance));
+		Suite->SetProperty(ConfigID, "DefaultDoor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoor)));
+		Suite->SetProperty(ConfigID, "DefaultDoorFrame", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoorFrame)));
+		Suite->SetProperty(ConfigID, "DefaultWindow", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultWindow)));
+		//Suite->SetProperty(ConfigID, "SkirtingCeil", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingCeil)));
+		//Suite->SetProperty(ConfigID, "SkirtingCeilExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingCeilExt)));
+		//Suite->SetProperty(ConfigID, "SkirtingFloor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingFloor)));
+		//Suite->SetProperty(ConfigID, "SkirtingFloorExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingFloorExt)));	
+	}
 }
 
 
@@ -713,7 +884,7 @@ int32 UBuildingSystem::GetRoomByLocation(const FVector2D &Loc)
 	return Objid;
 }
 
-void  UBuildingSystem::AddVirtualWall(ObjectID StartCorner, ObjectID EndCorner)
+void  UBuildingSystem::AddVirtualWall(int32 StartCorner, int32 EndCorner)
 {
 	if (Suite)
 	{
@@ -836,4 +1007,14 @@ void UBuildingSystem::OnUpdateSurfaceValue(IObject *RawObj, int SectionIndex, Ob
 			}
 		}
 	}
+}
+IValue* UBuildingSystem::GetProperty(ObjectID ID, const char *PropertyName)
+{
+	IValue *v = nullptr;
+	if (Suite)
+	{
+		v=&Suite->GetProperty(ID, PropertyName);
+	}
+	return v;
+
 }

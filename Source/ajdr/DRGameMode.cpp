@@ -188,7 +188,7 @@ void ADRGameMode::Startup()
 		APlayerController *MyController = GEngine->GetFirstLocalPlayerController(GetWorld());
 		if (MyController)
 		{
-			UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(MyController, MainFrame, EMouseLockMode::DoNotLock);
+			//UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(MyController, MainFrame, EMouseLockMode::DoNotLock);
 		}
 	}
 
