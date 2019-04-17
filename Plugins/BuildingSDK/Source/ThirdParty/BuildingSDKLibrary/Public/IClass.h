@@ -125,6 +125,7 @@ public:
 	virtual IValue *FindValue(const char *name) = 0;
 	virtual void SetValue(const char *name, IValue *value) = 0;
 	virtual void MarkNeedUpdate(EChannelMask Mask = EChannelAll) = 0;
+	virtual void Delete() = 0;
 };
 
 

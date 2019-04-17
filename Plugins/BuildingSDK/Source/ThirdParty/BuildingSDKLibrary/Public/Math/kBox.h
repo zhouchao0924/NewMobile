@@ -132,17 +132,33 @@ public:
 		return (p.X >= MinEdge.X && p.X <= MaxEdge.X &&
 			p.Y >= MinEdge.Y && p.Y <= MaxEdge.Y &&
 			p.Z >= MinEdge.Z && p.Z <= MaxEdge.Z);
-	};
+	}
 
 	//! Determinates if a point is within this TBox and its borders.
 	//! \param p: Point to check.
 	//! \return Returns true if the point is withing the TBox, and false if it is not.
 	bool IsPointTotalInside(const TVector3DTemp<T>& p) const
 	{
-		return (p.X > MinEdge.X && p.X < MaxEdge.X &&
-			p.Y > MinEdge.Y && p.Y < MaxEdge.Y &&
-			p.Z > MinEdge.Z && p.Z < MaxEdge.Z);
-	};
+		if (p.x < MinEdge.x)
+			return false;
+
+		if (p.x > MaxEdge.x)
+			return false;
+	
+		if (p.y < MinEdge.y)
+			return false;
+
+		if (p.y > MaxEdge.y)
+			return false;
+
+		if (p.z < MinEdge.z)
+			return false;
+
+		if (p.z > MaxEdge.z)
+			return false;
+
+		return true;
+	}
 
 	//! Determinates if the TBox intersects with another TBox.
 	//! \param other: Other TBox to check a intersection with.
