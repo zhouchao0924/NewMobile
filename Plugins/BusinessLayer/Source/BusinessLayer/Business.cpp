@@ -12,20 +12,37 @@ UBusinessComponent::UBusinessComponent(const FObjectInitializer &ObjectInitializ
 
 void UBusinessComponent::Login(const FString &UserName, const FString &Password, const FBusinessHandle &BusinessHandle, int32 TryCount/*= 5*/, int32 Milsec /*= 5000.0f*/)
 {
-	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);
-	Json->SetStringField(TEXT("account"), UserName);
-	Json->SetStringField(TEXT("password"), Password);
-	Json->SetNumberField(TEXT("systemId"), 4);
-
 	FString LoginURL;
 	GConfig->GetString(TEXT("Business"), TEXT("LoginURL"), LoginURL, GGameIni);
-
 	FString BaseHost;
 	GConfig->GetString(TEXT("Business"), TEXT("BaseHost"), BaseHost, GGameIni);
+	FString CallLoginURL = BaseHost.Append(LoginURL);
 
-	URLConfig.LoginURL = BaseHost.Append(LoginURL);
+	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);
+	Json->SetStringField(TEXT("account"), "18512529274");
+	Json->SetStringField(TEXT("password"), "Zqj85766389");
+	Json->SetNumberField(TEXT("systemId"), 4);
 
-	CallJsonURL(ERequestID::ELoginID, Json, BusinessHandle, URLConfig.LoginURL, TryCount, Milsec);
+	CallJsonURL(ERequestID::ELoginID, Json, BusinessHandle, CallLoginURL, TryCount, Milsec);
+}
+
+void UBusinessComponent::QuerySolutions(const FBusinessHandle &BusinessHandle)
+{
+	FString QuerySolutionURL;
+	GConfig->GetString(TEXT("Business"), TEXT("QuerySolutionURL"), QuerySolutionURL, GGameIni);
+	FString BaseHost;
+	GConfig->GetString(TEXT("Business"), TEXT("BaseHost"), BaseHost, GGameIni);
+	FString CallQuerySolutionURL = BaseHost.Append(QuerySolutionURL);
+
+	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);
+	Json->SetNumberField(TEXT("pageNo"), 1);
+	Json->SetNumberField(TEXT("pageSize"), 10);
+	Json->SetNumberField(TEXT("searchUserId"), 42707);
+	Json->SetNumberField(TEXT("solutionId"), 14403);
+	Json->SetNumberField(TEXT("type"), 1);
+
+
+	CallJsonURL(ERequestID::EQuerySolution, Json, BusinessHandle, CallQuerySolutionURL, DefaultTryCount, DefaultTimeout);
 }
 
 void UBusinessComponent::QueryCategories(const FBusinessHandle &BusinessHandle)
@@ -39,7 +56,7 @@ void UBusinessComponent::QueryGoodsPageInfo(int32 pageSize, const FBusinessHandl
 	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);
 	if (Json && pageSize>0)
 	{
-		Json->SetNumberField(TEXT("pageNo"), 0);
+		Json->SetNumberField(TEXT("pageNo"), 1);
 		Json->SetNumberField(TEXT("pageSize"), pageSize);
 		CallJsonURL(ERequestID::EQueryGoodsPageInfo, Json, BusinessHandle, URLConfig.QueryGoodByConditionURL, TryCount, Milsec);
 	}

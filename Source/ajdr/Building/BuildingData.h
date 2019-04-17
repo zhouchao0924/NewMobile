@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "IProperty.h"
 #include "Building/Building.h"
+
 #include "BuildingData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -78,6 +79,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	FPlane  GetPlane(const FString &Name);
 
+	UFUNCTION(BlueprintPure)
+	bool  IsRoot();
+
 	UFUNCTION(BlueprintCallable)
 	void SetFloat(const FString &Name, float fValue);
 
@@ -107,6 +111,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetID() { return ObjID; }
+
+	UFUNCTION(BlueprintCallable)
+	void Update();
 
 	struct FBuildingConfig *GetConfig();
 public:

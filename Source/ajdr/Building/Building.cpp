@@ -7,6 +7,11 @@ FVector2D ToVector2D(const kPoint &pt)
 	return FVector2D(pt.X, pt.Y); 
 }
 
+FVector2D ToUE4Vector2D(const kPoint &pt)
+{
+	return FVector2D(pt.X, pt.Y);
+}
+
 FVector ToUE4Vector(const kVector3D &V)
 {
 	return FVector(V.x, V.y, V.z);
@@ -87,6 +92,11 @@ kColor ToBuildingColor(const FLinearColor& Color)
 kVector4D ToBuildingVector4D(const FVector4& V)
 {
 	return kVector4D(V.X, V.Y, V.Z, V.W);
+}
+
+const char* FStringToConstChar(FString V)
+{
+	 return TCHAR_TO_ANSI(*V);
 }
 
 float ToUE4Len(float SuiteLen)

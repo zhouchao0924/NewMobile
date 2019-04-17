@@ -244,6 +244,20 @@ public:
 	UWorld *GetWorld() const override;
 	void SetVisitor(IBuildingVisitor *Visitor);
 	void UpdateChannelVisible();
+
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetObjIntValue(const int32& ObjID, UPARAM(ref) FString& ValueName, const int32& IntValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetObjFloatValue(const int32& ObjID, UPARAM(ref) FString& ValueName, const int32& FloatValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetObjFStringValue(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref) FString& FStringValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	void SetObjFVector(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector& FVectorValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+		void SetObjFVector2D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector2D& FVectorValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+		void SetObjFVector4D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector4& FVectorValue);
+
 protected:
 	void LoadObjInfo();
 	void OnAddObject(IObject *RawObj);
@@ -255,7 +269,7 @@ protected:
 	int32 FindHostWorld(UWorld *World);
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
 	ADRActor *SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
-	ADRActor *SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
+	void SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
 	FString						Filename;

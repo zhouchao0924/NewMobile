@@ -406,10 +406,10 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 		{
 			pActor = SpawnModelComponent(World, ObjInfo);
 		}
-		else if (Obj->IsA(EPointLight))//ELight,ESpotLight,ESkyLight,EPostProcess,	
-		{
-			pActor = SpawnLightComponent(World, ObjInfo);
-		}
+		//else if (Obj->IsA(EPointLight))//ELight,ESpotLight,ESkyLight,EPostProcess,	
+		//{
+		//	SpawnLightComponent(World, ObjInfo);
+		//}
 	}
 
 	if (Visitor)
@@ -425,6 +425,13 @@ ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &Ob
 	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
 	if (Actor)
 	{
+		//UBuildingData *Data = ObjInfo.Data;
+		//FVector Rotation = Data->GetVector(TEXT("Rotation"));
+		//Rotation.X = Rotation.X + 90;
+		//Data->SetVector(TEXT("Rotation"), Rotation);
+		//ObjInfo.Data = Data;
+		////从SU文件获取的模型位置数据，生成的模型都是倒90度的，添加X旋转90，暂时未知原因
+
 		Actor->Update(ObjInfo.Data);
 		ObjInfo.Actorts.Add(Actor);
 	}
@@ -451,7 +458,7 @@ ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo
 }
 
 //生成灯光组件
-ADRActor * UBuildingSystem::SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
+void UBuildingSystem::SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
 	UBuildingData *Data = ObjInfo.Data;
 	FVector Location = Data->GetVector(TEXT("Location"));
@@ -461,21 +468,6 @@ ADRActor * UBuildingSystem::SpawnLightComponent(UWorld *MyWorld, FObjectInfo &Ob
 	float  Intensity = Data->GetFloat(TEXT("Intensity"));
 	FLinearColor LightColor;
 	bool bCastShadow = Data->GetBool(TEXT("bCastShadow"));
-
-	ADRGameMode *MyGame = Cast<ADRGameMode>(MyWorld->GetAuthGameMode());
-
-	UBuildingSystem *BuildingSystem = MyGame->GetBuildingSystem(MyWorld);
-
-	BuildingSystem->AddPointLight(Location, SourceRadius, SoftSourceRadius, SourceLength, Intensity, LightColor, bCastShadow);
-
-	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
-	if (Actor)
-	{
-		Actor->Update(ObjInfo.Data);
-		ObjInfo.Actorts.Add(Actor);
-	}
-	return Actor;
-	
 }
 
 bool UBuildingSystem::IsFree(int32 ObjID)
@@ -757,6 +749,100 @@ void UBuildingSystem::UpdateChannelVisible()
 	}
 }
 
+void UBuildingSystem::SetObjIntValue(const int32& ObjID, FString& ValueName, const int32& IntValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			IValue &Value = VF->Create(IntValue);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	 }
+}
+
+void UBuildingSystem::SetObjFloatValue(const int32& ObjID, FString& ValueName, const int32& FloatValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			IValue &Value = VF->Create(FloatValue);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	}
+}
+
+void UBuildingSystem::SetObjFStringValue(const int32& ObjID, FString& ValueName, FString& FStringValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			const char* valuechar = FStringToConstChar(FStringValue);
+			IValue &Value = VF->Create(valuechar, true);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	}
+}
+
+void UBuildingSystem::SetObjFVector(const int32& ObjID, FString& ValueName, FVector& FVectorValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			kVector3D KValue = ToBuildingVector(FVectorValue);
+			IValue &Value = VF->Create(&KValue, true);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	}
+}
+
+void UBuildingSystem::SetObjFVector2D(const int32& ObjID, FString& ValueName, FVector2D& FVectorValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			kPoint KValue = ToBuildingPosition(FVectorValue);
+			IValue &Value = VF->Create(&KValue, true);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	}
+}
+
+void UBuildingSystem::SetObjFVector4D(const int32& ObjID, FString& ValueName, FVector4& FVectorValue)
+{
+	if (Suite)
+	{
+		IValueFactory* VF = UBuildingSystem::GetValueFactory();
+		IObject* Obj = Suite->GetObject(ObjID);
+		if (VF && Obj)
+		{
+			kVector4D KValue = ToBuildingVector4D(FVectorValue);
+			IValue &Value = VF->Create(&KValue, true);
+			const char *Key = TCHAR_TO_ANSI(*ValueName);
+			Obj->SetValue(Key, &Value);
+		}
+	}
+}
+
 void UBuildingSystem::GetAllCornerActorLoction(TArray<FVector2D> &OutAllCornerActorLoction, int32 objectID)
 {
 	if (Suite)
@@ -833,12 +919,72 @@ void UBuildingSystem::LoadingConfig(FBuildingConfig * Config)
 		Suite->SetProperty(ConfigID, "DefaultDoor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoor)));
 		Suite->SetProperty(ConfigID, "DefaultDoorFrame", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultDoorFrame)));
 		Suite->SetProperty(ConfigID, "DefaultWindow", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->DefaultWindow)));
-		//Suite->SetProperty(ConfigID, "SkirtingCeil", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingCeil)));
-		//Suite->SetProperty(ConfigID, "SkirtingCeilExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingCeilExt)));
-		//Suite->SetProperty(ConfigID, "SkirtingFloor", &GetValueFactory()->Create(TCHAR_TO_ANSI(*Config->SkirtingFloor)));
-		//Suite->SetProperty(ConfigID, "SkirtingFloorExt", &GetValueFactory()->Create(&ToBuildingPosition(Config->SkirtingFloorExt)));	
 	}
 }
+
+//void UBuildingSystem::SetHouseImage(FDRHouseImage _HI)
+//{
+//	if (Suite)
+//	{
+//		ObjectID ConfigID = Suite->GetConfig();
+//		UBuildingData * _BD = GetData(ConfigID);
+//		if (_BD)
+//		{
+//			IObject * _Obj = _BD->GetRawObj();
+//			if (_Obj)
+//			{
+//				IValue & HI = GetValueFactory()->Create();
+//				/*CopyMode,SpinValue,SceneWorldDistance,Path,Scene0Location,SLocation,PlaneLocation,PlaneRotation,PlaneScale*/
+//				HI.AddField("CopyMode", GetValueFactory()->Create(_HI.CopyMode));
+//				HI.AddField("SpinValue", GetValueFactory()->Create(_HI.SpinValue));
+//				HI.AddField("SceneWorldDistance", GetValueFactory()->Create(_HI.SceneWorldDistance));
+//				HI.AddField("Path", GetValueFactory()->Create(TCHAR_TO_ANSI(*(_HI.Path))));
+//				kVector3D Scene0Location = ToBuildingVector(_HI.Scene0Location);
+//				HI.AddField("Scene0Location", GetValueFactory()->Create(&Scene0Location));
+//				kVector3D SLocation = ToBuildingVector(_HI.SLocation);
+//				HI.AddField("SLocation", GetValueFactory()->Create(&SLocation));
+//				kVector3D PlaneLocation = ToBuildingVector(_HI.PlaneLocation);
+//				HI.AddField("PlaneLocation", GetValueFactory()->Create(&PlaneLocation));
+//				kVector3D PlaneRotation = ToBuildingVector(_HI.PlaneRotation);
+//				HI.AddField("PlaneRotation", GetValueFactory()->Create(&PlaneRotation));
+//				kVector3D PlaneScale = ToBuildingVector(_HI.PlaneScale);
+//				HI.AddField("PlaneScale", GetValueFactory()->Create(&PlaneScale));
+//
+//				_Obj->SetValue("HouseImage", &HI);
+//			}
+//		}
+//	}
+//}
+//
+//
+//void UBuildingSystem::GetHouseImage(FDRHouseImage & HouseImage)
+//{
+//	if (Suite)
+//	{
+//		ObjectID ConfigID = Suite->GetConfig();
+//		UBuildingData * _BD = GetData(ConfigID);
+//		if (_BD)
+//		{
+//			IObject* _Obj = _BD->GetRawObj();
+//			if (_Obj)
+//			{
+//				IValue* HIData = _Obj->FindValue("HouseImage");
+//				if (HIData)
+//				{
+//					HouseImage.CopyMode = HIData->GetField("CopyMode").BoolValue();
+//					HouseImage.SpinValue = HIData->GetField("SpinValue").FloatValue();
+//					HouseImage.SceneWorldDistance = HIData->GetField("SceneWorldDistance").FloatValue();
+//					HouseImage.Path = HIData->GetField("Path").StrValue();
+//					HouseImage.Scene0Location = ToUE4Vector(HIData->GetField("Scene0Location").Vec3Value());
+//					HouseImage.SLocation = ToUE4Vector(HIData->GetField("SLocation").Vec3Value());
+//					HouseImage.PlaneLocation = ToUE4Vector(HIData->GetField("PlaneLocation").Vec3Value());
+//					HouseImage.PlaneRotation = ToUE4Vector(HIData->GetField("PlaneRotation").Vec3Value());
+//					HouseImage.PlaneScale = ToUE4Vector(HIData->GetField("PlaneScale").Vec3Value());
+//				}
+//			}
+//		}
+//	}
+//}
 
 
 int32 UBuildingSystem::GetPolygon(int32 objID, TArray<FVector2D>& TPolygons, bool binner)

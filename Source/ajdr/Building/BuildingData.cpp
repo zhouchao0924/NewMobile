@@ -63,6 +63,14 @@ int32 UBuildingData::GetObjectType()
 	return 0;
 }
 
+void UBuildingData::Update()
+{
+	if (GetRawObj())
+	{
+		GetRawObj()->MarkNeedUpdate(EChannelUserData);
+	}
+}
+
 float UBuildingData::GetFloat(const FString &Name)
 {
 	ISuite *Suite = GetSuite();
@@ -171,6 +179,16 @@ FVector2D UBuildingData::GetVector2D(const FString &Name)
 		return ToVector2D(Suite->GetProperty(ObjID, AnsiName).Vec2Value());
 	}
 	return FVector2D::ZeroVector;
+}
+
+bool UBuildingData::IsRoot()
+{
+	if (GetRawObj())
+	{
+		UE_LOG(LogTemp, Log, TEXT("IsRoot(float[%d])"), (int32)GetRawObj()->IsRoot());
+		return GetRawObj()->IsRoot();
+	}
+	return false;
 }
 
 void UBuildingData::SetFloat(const FString &Name, float fValue)
@@ -358,11 +376,11 @@ FPropertyInfo UBuildingData::GetPropertyInfo(int32 Index)
 
 FBuildingConfig *UBuildingData::GetConfig()
 {
-	/*ADRGameMode *MyGame = ADRGameMode::GetDRGameMode(UObject *WorldContextObject);
+	ADRGameMode *MyGame = Cast<ADRGameMode>(GetWorld()->GetAuthGameMode());
 	if (MyGame)
 	{
 		return MyGame->GetConfig();
-	}*/
+	}
 	return nullptr;
 }
 

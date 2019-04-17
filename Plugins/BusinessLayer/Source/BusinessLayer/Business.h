@@ -47,6 +47,7 @@ UENUM(BlueprintType)
 enum class ERequestID :uint8
 {
 	ELoginID,
+	EQuerySolution,
 	EQuerySeries,
 	EQueryGoodsByCond,
 	EQueryGoodsPageInfo,
@@ -62,6 +63,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Logout(const FBusinessHandle &BusinessHandle);
+
+	UFUNCTION(BlueprintCallable)
+	void QuerySolutions(const FBusinessHandle &BusinessHandle);
 
 	UFUNCTION(BlueprintCallable)
 	void QueryCategories(const FBusinessHandle &BusinessHandle);
