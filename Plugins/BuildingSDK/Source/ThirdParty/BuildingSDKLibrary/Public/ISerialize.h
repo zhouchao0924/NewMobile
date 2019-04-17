@@ -64,11 +64,11 @@ public:
 
 #define  KSERIALIZE_ENUM(enumtype, enumvalue){	\
 			if (Ar.IsSaving()) {				\
-				int v = (int)enumvalue;			\
+				char v = (char)enumvalue;		\
 				Ar << v;						\
 			}									\
 			else if (Ar.IsLoading()) {			\
-				int v = 0;						\
+				char v = 0;						\
 				Ar << v;						\
 				enumvalue = (enumtype)v;		\
 			}									\
