@@ -155,7 +155,7 @@ public:
 	int32 AddCorner(const FVector2D &Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Suite")
-	int32 AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location);
+	int32 AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const kRotation &Rotation, const FVector &Scale, int Type /*= -1*/);
 		
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	int32 AddModelToAnchor(int32 AnchorID, const FString &ResID, const FVector &Location);

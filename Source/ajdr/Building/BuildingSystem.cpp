@@ -422,16 +422,12 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 //生成ModelFile模型
 ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
+	UBuildingData *Data = ObjInfo.Data;
+	FVector Location = Data->GetVector(TEXT("Location"));
+
 	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
 	if (Actor)
 	{
-		//UBuildingData *Data = ObjInfo.Data;
-		//FVector Rotation = Data->GetVector(TEXT("Rotation"));
-		//Rotation.X = Rotation.X + 90;
-		//Data->SetVector(TEXT("Rotation"), Rotation);
-		//ObjInfo.Data = Data;
-		////从SU文件获取的模型位置数据，生成的模型都是倒90度的，添加X旋转90，暂时未知原因
-
 		Actor->Update(ObjInfo.Data);
 		ObjInfo.Actorts.Add(Actor);
 	}
@@ -571,13 +567,14 @@ int32  UBuildingSystem::AddCorner(const FVector2D &Location)
 	return INVALID_OBJID;
 }
 
-int32 UBuildingSystem::AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location)
+int32 UBuildingSystem::AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const kRotation &Rotation, const FVector &Scale, int Type /*= -1*/)
 {
 	if (Suite)
 	{
 		const char *AnsiResID = TCHAR_TO_ANSI(*ResID);
 		kVector3D Loc = ToBuildingPosition(Location);
-		return Suite->AddModelToObject(BaseObjID, AnsiResID, Loc);
+		kVector3D Sca = ToBuildingPosition(Scale);
+		return Suite->AddModelToObject(BaseObjID, AnsiResID, Loc, Rotation, Sca, Type);
 	}
 	return INVALID_OBJID;
 }

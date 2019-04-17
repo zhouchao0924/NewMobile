@@ -29,7 +29,6 @@ void AModelFileActor::UpdateCompoennt(UModelFileComponent *InModelFileComponent,
 			if (ModelFile)
 			{
 				FVector Location = Data->GetVector(TEXT("Location"));
-				FRotator Rotation = Data->GetRotation(TEXT("Rotation"));
 				FVector Forward = Data->GetVector(TEXT("Forward"));
 				int32  AlignType = Data->GetInt(TEXT("AlignType"));
 
@@ -37,12 +36,10 @@ void AModelFileActor::UpdateCompoennt(UModelFileComponent *InModelFileComponent,
 				if (pActor)
 				{
 					pActor->SetActorLocationAndRotation(Location, Forward.ToOrientationRotator(), false);
-					//pActor->SetActorLocationAndRotation(Location, Rotation, false);
 				}
 				else
 				{
 					InModelFileComponent->SetWorldLocationAndRotation(Location, Forward.ToOrientationRotator());
-					//InModelFileComponent->SetWorldLocationAndRotation(Location, Rotation);
 				}
 
 				FVector ClipNormal0 = Data->GetVector(TEXT("ClipNormal0"));
