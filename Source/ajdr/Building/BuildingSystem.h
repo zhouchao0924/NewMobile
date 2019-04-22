@@ -152,6 +152,26 @@ public:
 		FString	ResID;
 };
 
+USTRUCT(BlueprintType)
+struct FLightDatac
+{
+	GENERATED_USTRUCT_BODY()
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+		int32	ObjID;
+
+	UPROPERTY(BlueprintReadWrite)
+		float   SI;
+
+	UPROPERTY(BlueprintReadWrite)
+		FVector	Location;
+
+	UPROPERTY(BlueprintReadWrite)
+		int32	Type;
+
+};
+
 UCLASS(BlueprintType)
 class UBuildingSystem :public UObject, public ISuiteListener, public FTickableGameObject
 {
@@ -292,7 +312,8 @@ public:
 		void SetObjFVector4D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector4& FVectorValue);
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 		void SetADataList(const FADatac AData);
-
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+		void SetLightDataList(const FLightDatac LightData);
 protected:
 	void LoadObjInfo();
 	void OnAddObject(IObject *RawObj);
@@ -304,7 +325,7 @@ protected:
 	int32 FindHostWorld(UWorld *World);
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
 	ADRActor *SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
-	void SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
+	ADRActor *SpawnLightComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
 	FString						Filename;
@@ -323,5 +344,6 @@ public:
 	FSlateContext				SlateContext;
 	static	IBuildingSDK		*BuildingSDK;
 	TArray<FADatac>				ADataList;
+	TArray<FLightDatac>		    LightDataList;
 };
 

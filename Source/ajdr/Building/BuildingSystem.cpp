@@ -18,6 +18,8 @@
 #include "Public/UObject/ConstructorHelpers.h"
 #include "DRGameMode.h"
 #include "FileHelper.h"
+#include "PointLightActor.h"
+#include "SpotLightActor.h"
 
 
 IBuildingSDK *UBuildingSystem::BuildingSDK = nullptr;
@@ -425,18 +427,18 @@ ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FO
 		{
 			pActor = SpawnModelComponent(RawObj, World, ObjInfo);
 		}
-		//else if (Obj->IsA(ESkyLight))
-		//{
-		//	pActor = SpawnModelComponent(World, ObjInfo);
-		//}
-		//else if (Obj->IsA(EPostProcess))
-		//{
-		//	pActor = SpawnModelComponent(World, ObjInfo);
-		//}
 		//else if (Obj->IsA(EPointLight))	
 		//{
-		//	pActor = SpawnModelComponent(World, ObjInfo);
+		//	pActor = SpawnLightComponent(RawObj,World, ObjInfo);
 		//}
+		//else if (Obj->IsA(ESpotLight))
+		//{
+		//	pActor = SpawnLightComponent(RawObj, World, ObjInfo);
+		//}
+		else
+		{
+			pActor = SpawnLightComponent(RawObj, World, ObjInfo);
+		}
 	}
 
 	if (Visitor)
@@ -451,6 +453,14 @@ void UBuildingSystem::SetADataList(const FADatac AData)
 	if (Suite)
 	{
 		ADataList.Add(AData);
+	}
+}
+
+void UBuildingSystem::SetLightDataList(const FLightDatac LData)
+{
+	if (Suite)
+	{
+		LightDataList.Add(LData);
 	}
 }
 
@@ -482,6 +492,7 @@ ADRActor * UBuildingSystem::SpawnModelComponent(IObject *RawObj, UWorld *MyWorld
 		RR.Yaw = ADataList[n].Rotation.Pitch;
 		RR.Roll = ADataList[n].Rotation.Roll;
 		Actor->SetActorRotation(RR);
+
 		ObjInfo.Actorts.Add(Actor);
 	}
 	return Actor;
@@ -507,16 +518,41 @@ ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo
 }
 
 //生成灯光组件
-void UBuildingSystem::SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
+ADRActor *UBuildingSystem::SpawnLightComponent(IObject *RawObj,UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
-	UBuildingData *Data = ObjInfo.Data;
-	FVector Location = Data->GetVector(TEXT("Location"));
-	float SourceRadius = Data->GetFloat(TEXT("SourceRadius"));
-	float SoftSourceRadius = Data->GetFloat(TEXT("SoftSourceRadius"));
-	float  SourceLength = Data->GetFloat(TEXT("SourceLength"));
-	float  Intensity = Data->GetFloat(TEXT("Intensity"));
-	FLinearColor LightColor;
-	bool bCastShadow = Data->GetBool(TEXT("bCastShadow"));
+	APointLightActor *Actor = nullptr;
+	if (LightDataList.Num()>0)
+	{
+		for (int i = 0; i < LightDataList.Num(); ++i)
+		{
+			int32 a = LightDataList[i].ObjID;
+			int32 b = RawObj->GetID();
+			if (a == b)
+			{	
+				if (LightDataList[i].Type == 1)
+				{
+					APointLightActor *Actor = (APointLightActor *)MyWorld->SpawnActor(APointLightActor::StaticClass(), &FTransform::Identity);
+					FVector Location = LightDataList[i].Location;
+					Actor->SetActorRelativeLocation(Location);
+
+					Actor->Update(ObjInfo.Data, LightDataList[i].SI);
+					ObjInfo.Actorts.Add(Actor);
+					break;
+				}
+				else
+				{
+					ASpotLightActor *Actor = (ASpotLightActor *)MyWorld->SpawnActor(ASpotLightActor::StaticClass(), &FTransform::Identity);
+					FVector Location = LightDataList[i].Location;
+					Actor->SetActorRelativeLocation(Location);
+
+					Actor->Update(ObjInfo.Data, LightDataList[i].SI);
+					ObjInfo.Actorts.Add(Actor);
+					break;
+				}				
+			}
+		};
+	}
+	return Actor;
 }
 
 bool UBuildingSystem::IsFree(int32 ObjID)
