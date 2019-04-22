@@ -3,6 +3,7 @@
 #include "Building/BuildingData.h"
 #include "ModelFileActor.h"
 #include "ResourceMgr.h"
+#include "Building/BuildingSystem.h"
 
 AModelFileActor::AModelFileActor(const FObjectInitializer &ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -20,8 +21,6 @@ void AModelFileActor::UpdateCompoennt(UModelFileComponent *InModelFileComponent,
 	if (InModelFileComponent && Data)
 	{
 		FString ResID = Data->GetString(TEXT("ResID"));
-		int32   ModelID = Data->GetInt(TEXT("ModelID"));
-
 		UResourceMgr *ResMgr = UResourceMgr::GetResourceMgr();
 		if (ResMgr)
 		{
@@ -59,6 +58,7 @@ void AModelFileActor::UpdateCompoennt(UModelFileComponent *InModelFileComponent,
 				ModelFile->ForceLoad();
 				InModelFileComponent->SetModelAlignType(ECenterAdjustType(AlignType));
 				InModelFileComponent->UpdateModel(ModelFile);
+
 			}
 		}
 	}

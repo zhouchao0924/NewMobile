@@ -122,6 +122,36 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBuildingPropertyChangedHander, UBu
 class ADRActor;
 class ABuildingActor;
 
+
+
+USTRUCT(BlueprintType)
+struct FADatac
+{
+	GENERATED_USTRUCT_BODY()
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+		int32	ObjID;
+
+	UPROPERTY(BlueprintReadWrite)
+		int32	ModelID;
+
+	UPROPERTY(BlueprintReadWrite)
+		int32	BindID;
+
+	UPROPERTY(BlueprintReadWrite)
+		FVector	Location;
+
+	UPROPERTY(BlueprintReadWrite)
+		FRotator Rotation;
+
+	UPROPERTY(BlueprintReadWrite)
+		FVector	Scale;
+
+	UPROPERTY(BlueprintReadWrite)
+		FString	ResID;
+};
+
 UCLASS(BlueprintType)
 class UBuildingSystem :public UObject, public ISuiteListener, public FTickableGameObject
 {
@@ -129,6 +159,9 @@ class UBuildingSystem :public UObject, public ISuiteListener, public FTickableGa
 public:
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	bool LoadFile(const FString &InFilename);
+
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+	static bool LoadStringFromFile(FString& Contents, FString FullFilePath);
 	
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	void SaveFile(const FString &InFilename);
@@ -155,7 +188,7 @@ public:
 	int32 AddCorner(const FVector2D &Location);
 
 	UFUNCTION(BlueprintCallable, Category = "Suite")
-	int32 AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const kRotation &Rotation, const FVector &Scale, int Type /*= -1*/);
+	int32 AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const FRotator &Rotation, const FVector &Scale, int Type /*= -1*/);
 		
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	int32 AddModelToAnchor(int32 AnchorID, const FString &ResID, const FVector &Location);
@@ -257,6 +290,8 @@ public:
 		void SetObjFVector2D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector2D& FVectorValue);
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 		void SetObjFVector4D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector4& FVectorValue);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+		void SetADataList(const FADatac AData);
 
 protected:
 	void LoadObjInfo();
@@ -265,10 +300,10 @@ protected:
 	void OnUpdateObject(IObject *RawObj, unsigned int ChannelMask);
 	void ClearObjInfo(FObjectInfo *ObjInfo);
 	FObjectInfo *NewSuiteData(IObject *RawObj);
-	ADRActor *SpawnActorByObject(UWorld *World, FObjectInfo &ObjInfo);
+	ADRActor *SpawnActorByObject(IObject *RawObj,UWorld *World, FObjectInfo &ObjInfo);
 	int32 FindHostWorld(UWorld *World);
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
-	ADRActor *SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
+	ADRActor *SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
 	void SpawnLightComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
@@ -287,6 +322,6 @@ public:
 	ISuite						*Suite;
 	FSlateContext				SlateContext;
 	static	IBuildingSDK		*BuildingSDK;
-	//UClass						*PointLightClass;
+	TArray<FADatac>				ADataList;
 };
 

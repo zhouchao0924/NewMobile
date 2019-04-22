@@ -17,6 +17,7 @@
 #include "SceneViewport.h"
 #include "Public/UObject/ConstructorHelpers.h"
 #include "DRGameMode.h"
+#include "FileHelper.h"
 
 
 IBuildingSDK *UBuildingSystem::BuildingSDK = nullptr;
@@ -50,6 +51,24 @@ UBuildingSystem::UBuildingSystem(const FObjectInitializer &ObjectIntializer)
 	/*static ConstructorHelpers::FClassFinder<AActor> PointLight(TEXT("Blueprint'/Game/Light/Editor_PointLight_Base.Editor_PointLight_Base_C'"));
 	UClass *PointLightClass = PointLight.Class;*/
 }
+//载入文本文件
+bool UBuildingSystem::LoadStringFromFile(FString& Contents, FString FullFilePath)
+{
+
+	FString File;
+
+	if (FullFilePath == "" || FullFilePath == " ") return false;
+
+	if (!FFileHelper::LoadFileToString(File, *FullFilePath, FFileHelper::EHashOptions::None))
+	{
+		return false;
+	}
+
+	Contents = File;
+	return true;
+
+}
+
 
 UBuildingSystem *UBuildingSystem::LoadNewSuite(UObject *Outer, const FString &InFilename)
 {
@@ -165,7 +184,7 @@ void UBuildingSystem::AddToWorld(UObject *WorldContextObject)
 			for (TMap<int32, FObjectInfo>::TIterator It(ObjMap); It; ++It)
 			{
 				FObjectInfo &ObjInfo = It.Value();
-				SpawnActorByObject(MyWorld, ObjInfo);
+				//SpawnActorByObject(MyWorld, ObjInfo);
 			}
 			HostWorlds.Add(MyWorld);
 		}
@@ -274,7 +293,7 @@ void UBuildingSystem::OnAddObject(IObject *RawObj)
 				UWorld *World = (UWorld *)HostWorlds[i].Get(true);
 				if (World)
 				{
-					SpawnActorByObject(World, *ObjInfo);
+					SpawnActorByObject(RawObj, World, *ObjInfo);
 				}
 				else
 				{
@@ -391,7 +410,7 @@ void UBuildingSystem::OnUpdateObject(IObject *RawObj, unsigned int ChannelMask)
 }
 
 //根据Object的Type生成对应的部件
-ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInfo)
+ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FObjectInfo &ObjInfo)
 {
 	ADRActor *pActor = nullptr;
 	IObject *Obj = ObjInfo.Data->GetRawObj();
@@ -404,11 +423,19 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 		}
 		else if (Obj->IsA(EModelInstance))
 		{
-			pActor = SpawnModelComponent(World, ObjInfo);
+			pActor = SpawnModelComponent(RawObj, World, ObjInfo);
 		}
-		//else if (Obj->IsA(EPointLight))//ELight,ESpotLight,ESkyLight,EPostProcess,	
+		//else if (Obj->IsA(ESkyLight))
 		//{
-		//	SpawnLightComponent(World, ObjInfo);
+		//	pActor = SpawnModelComponent(World, ObjInfo);
+		//}
+		//else if (Obj->IsA(EPostProcess))
+		//{
+		//	pActor = SpawnModelComponent(World, ObjInfo);
+		//}
+		//else if (Obj->IsA(EPointLight))	
+		//{
+		//	pActor = SpawnModelComponent(World, ObjInfo);
 		//}
 	}
 
@@ -419,21 +446,47 @@ ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInf
 	return pActor;
 }
 
+void UBuildingSystem::SetADataList(const FADatac AData)
+{
+	if (Suite)
+	{
+		ADataList.Add(AData);
+	}
+}
+
 //生成ModelFile模型
-ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
+ADRActor * UBuildingSystem::SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
 	UBuildingData *Data = ObjInfo.Data;
-	FVector Location = Data->GetVector(TEXT("Location"));
+	FTransform Tra;
+	int n = 0;
+	for (int i = 0; i < ADataList.Num(); ++i)
+	{
+		int32 a = ADataList[i].ObjID;
+		int32 b = RawObj->GetID();
+		if (a == b)
+		{
+			Tra.SetScale3D(ADataList[i].Scale);
+			n = i;
+			break;
+		}
+	};
 
-	AModelFileActor *Actor = (AModelFileActor *)MyWorld->SpawnActor(AModelFileActor::StaticClass(), &FTransform::Identity);
+	AModelFileActor *Actor = MyWorld->SpawnActor<AModelFileActor>(AModelFileActor::StaticClass(), Tra);
 	if (Actor)
 	{
 		Actor->Update(ObjInfo.Data);
+
+		FRotator RR;
+		RR.Pitch = ADataList[n].Rotation.Yaw;
+		RR.Yaw = ADataList[n].Rotation.Pitch;
+		RR.Roll = ADataList[n].Rotation.Roll;
+		Actor->SetActorRotation(RR);
 		ObjInfo.Actorts.Add(Actor);
 	}
 	return Actor;
-}
-
+};
+	
 //生成户型组件
 ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType)
 {
@@ -567,14 +620,15 @@ int32  UBuildingSystem::AddCorner(const FVector2D &Location)
 	return INVALID_OBJID;
 }
 
-int32 UBuildingSystem::AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const kRotation &Rotation, const FVector &Scale, int Type /*= -1*/)
+int32 UBuildingSystem::AddModelToObject(int32 BaseObjID, const FString &ResID, const FVector &Location, const FRotator &Rotation, const FVector &Scale, int Type /*= -1*/)
 {
 	if (Suite)
 	{
 		const char *AnsiResID = TCHAR_TO_ANSI(*ResID);
 		kVector3D Loc = ToBuildingPosition(Location);
 		kVector3D Sca = ToBuildingPosition(Scale);
-		return Suite->AddModelToObject(BaseObjID, AnsiResID, Loc, Rotation, Sca, Type);
+		kRotation Rot = ToBuildingRotation(Rotation);
+		return Suite->AddModelToObject(BaseObjID, AnsiResID, Loc, Rot, Sca, Type);
 	}
 	return INVALID_OBJID;
 }

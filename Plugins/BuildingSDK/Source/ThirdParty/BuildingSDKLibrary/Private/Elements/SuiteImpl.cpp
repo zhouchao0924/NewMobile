@@ -1,4 +1,4 @@
-
+ï»¿
 #include <map>
 #include "SuiteImpl.h"
 #include "Wall.h"
@@ -430,7 +430,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 				}
 			}
 
-			//Ïà¶Ô½Ç¶ÈÅÅĞò
+			//ç›¸å¯¹è§’åº¦æ’åº
 			for (size_t i = 0; i < walls.size(); ++i)
 			{
 				for (size_t j = walls.size() - 1; j > i; --j)
@@ -451,7 +451,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 
 	Context.pushState();
 
-	//°´ÕÕÓÅÏÈ¼¶²éÕÒ·â±ÕµÄÇøÓò
+	//æŒ‰ç…§ä¼˜å…ˆçº§æŸ¥æ‰¾å°é—­çš„åŒºåŸŸ
 	for (size_t i = 0; i < walls.size(); ++i)
 	{
 		Context.useState();
@@ -502,7 +502,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 				}
 				else
 				{
-					if (fDot <= 0)//ÔÙ´Î¿ªÆô¼ì²â
+					if (fDot <= 0)//å†æ¬¡å¼€å¯æ£€æµ‹
 					{
 						Context.bCheckCCW = false;
 					}
@@ -958,7 +958,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 		kPoint P0 = s->GetLocation();
 		kPoint P1 = e->GetLocation();
 
-		//µÃµ½¿ÉÑ¡Ç½Ìå
+		//å¾—åˆ°å¯é€‰å¢™ä½“
 		std::vector<FWallHoleInfo> Holes;
 		std::vector<ObjectID> Splits;
 		std::vector<float>	  SplitDists;
@@ -983,7 +983,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			pWall->GetLocations(wP0, wP1);
 
 			kPoint wD = wP1 - wP0;
-			float wSQL = wD.SizeSquared(); //Ç½Ìå³¤¶ÈÎªÁã
+			float wSQL = wD.SizeSquared(); //å¢™ä½“é•¿åº¦ä¸ºé›¶
 			if (wSQL <= 0)
 			{
 				continue;
@@ -992,7 +992,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			float  wL = std::sqrt(wSQL);
 			kPoint nD = wD*(1.0f / wL);
 
-			//Á¬½ÓÏßÉÏ
+			//è¿æ¥çº¿ä¸Š
 			kPoint DL0 = P0 - wP0;
 			float  fDot0 = DL0.Dot(nD);
 			kPoint Dir = DL0.Normalize();
@@ -1023,13 +1023,13 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 				continue;
 			}
 
-			//¼ì²âÏà½»
+			//æ£€æµ‹ç›¸äº¤
 			kPoint wD0 = P0 - wP0;
 			kPoint wD1 = P1 - wP0;
 			float c0 = kPoint::CrossProduct(wD, wD0);
 			float c1 = kPoint::CrossProduct(wD, wD1);
 
-			if (c0*c1 > 0)	//²»Ïà½»
+			if (c0*c1 > 0)	//ä¸ç›¸äº¤
 			{
 				continue;
 			}
@@ -1042,12 +1042,12 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 
 			float lr = d0 / (d0 + d1);
 			kPoint IntersecPos = (P1 - P0)*lr + P0;
-			if (!IsBetweenPoint(IntersecPos, wP0, wP1, wSQL)) //Ïà½»µãÔÚÇ½ÌåÍâ²¿
+			if (!IsBetweenPoint(IntersecPos, wP0, wP1, wSQL)) //ç›¸äº¤ç‚¹åœ¨å¢™ä½“å¤–éƒ¨
 			{
 				continue;
 			}
 
-			//·Ö¸î¾ÉÇ½Ìå
+			//åˆ†å‰²æ—§å¢™ä½“
 			ObjectID E = pWall->P[1];
 			Corner *NewCorner = _AddCorner(IntersecPos.x, IntersecPos.y, true);
 			if (!NewCorner)
@@ -1063,7 +1063,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 				InnerAddWall(pWall->GetType(), SplitID, E, pWall->GetThickLeft(), pWall->GetThickRight(), pWall->GetHeight(0), &Holes);
 			}
 
-			//¼ÇÂ¼·Ö¸îµã , ²åÈëºÏÊÊµÄÎ»ÖÃ
+			//è®°å½•åˆ†å‰²ç‚¹ , æ’å…¥åˆé€‚çš„ä½ç½®
 			float sp_dist = (IntersecPos - P0).SizeSquared();
 			size_t n = SplitDists.size();
 			Splits.resize(n + 1);
@@ -1085,7 +1085,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			SplitDists[k] = sp_dist;
 		}
 
-		//Éú³ÉÇĞ¸îºóĞÂµÄÇ½Ìå
+		//ç”Ÿæˆåˆ‡å‰²åæ–°çš„å¢™ä½“
 		ObjectID CornerID = StartCorner;
 		for (size_t i = 0; i < Splits.size(); ++i)
 		{
@@ -1622,7 +1622,7 @@ ObjectID SuiteImpl::FindCloseWall(const kPoint &Location, float Width, kPoint &B
 			kPoint Dir = P10 / Len10;
 			float fDot = Dir.Dot(PL0);
 
-			//ÔÚÇ½ÌåÄÚ²¿,ÇÒ²»ÔÚÇ½¶´ÄÚ
+			//åœ¨å¢™ä½“å†…éƒ¨,ä¸”ä¸åœ¨å¢™æ´å†…
 			if ( fDot > 0 && fDot < Len10 && 
 					pWall->HitTestHole(fDot)==INVALID_OBJID) 
 			{
