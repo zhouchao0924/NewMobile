@@ -45,6 +45,20 @@ void UBusinessComponent::QuerySolutions(const FBusinessHandle &BusinessHandle)
 	CallJsonURL(ERequestID::EQuerySolution, Json, BusinessHandle, CallQuerySolutionURL, DefaultTryCount, DefaultTimeout);
 }
 
+void UBusinessComponent::QueryReplace(const FBusinessHandle &BusinessHandle,const TArray<float> &skuids)
+{
+	FString QueryReplaceURL;
+	GConfig->GetString(TEXT("Business"), TEXT("QueryReplaceURL"), QueryReplaceURL, GGameIni);
+	FString BaseHost;
+	GConfig->GetString(TEXT("Business"), TEXT("BaseHost"), BaseHost, GGameIni);
+	FString CallQueryReplaceURL = BaseHost.Append(QueryReplaceURL);
+
+	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);
+	Json->SetNumberArrayField(TEXT("skuIds"), skuids);
+	
+	CallJsonURL(ERequestID::EQuerySolution, Json, BusinessHandle, CallQueryReplaceURL, DefaultTryCount, DefaultTimeout);
+}
+
 void UBusinessComponent::QueryCategories(const FBusinessHandle &BusinessHandle)
 {
 	UVaRestJsonObject *Json = NewObject<UVaRestJsonObject>(this);

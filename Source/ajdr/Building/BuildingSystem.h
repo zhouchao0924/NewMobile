@@ -172,6 +172,26 @@ public:
 
 };
 
+USTRUCT(BlueprintType)
+struct FDWDatac
+{
+	GENERATED_USTRUCT_BODY()
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+		FVector	Loctioan;
+
+	UPROPERTY(BlueprintReadWrite)
+		FRotator  Rotation;
+
+	UPROPERTY(BlueprintReadWrite)
+		FVector	Scale;
+
+	UPROPERTY(BlueprintReadWrite)
+		FString	ResID;
+
+};
+
 UCLASS(BlueprintType)
 class UBuildingSystem :public UObject, public ISuiteListener, public FTickableGameObject
 {
@@ -314,6 +334,8 @@ public:
 		void SetADataList(const FADatac AData);
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 		void SetLightDataList(const FLightDatac LightData);
+	UFUNCTION(BlueprintCallable, Category = "Suite")
+		void SetDWDataList(const FDWDatac DWData);
 protected:
 	void LoadObjInfo();
 	void OnAddObject(IObject *RawObj);
@@ -326,6 +348,7 @@ protected:
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
 	ADRActor *SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
 	ADRActor *SpawnLightComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
+	void SpawnDWModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
 	FString						Filename;
@@ -345,5 +368,7 @@ public:
 	static	IBuildingSDK		*BuildingSDK;
 	TArray<FADatac>				ADataList;
 	TArray<FLightDatac>		    LightDataList;
+	TArray<FDWDatac>		    DWDataList;
+	bool						DWHasLoad;
 };
 

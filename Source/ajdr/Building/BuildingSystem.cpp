@@ -20,6 +20,7 @@
 #include "FileHelper.h"
 #include "PointLightActor.h"
 #include "SpotLightActor.h"
+#include "DWActor.h"
 
 
 IBuildingSDK *UBuildingSystem::BuildingSDK = nullptr;
@@ -48,6 +49,7 @@ UBuildingSystem::UBuildingSystem(const FObjectInitializer &ObjectIntializer)
 	: Super(ObjectIntializer)
 	, Suite(nullptr)
 	, Visitor(nullptr)
+	, DWHasLoad(false)
 
 {
 	/*static ConstructorHelpers::FClassFinder<AActor> PointLight(TEXT("Blueprint'/Game/Light/Editor_PointLight_Base.Editor_PointLight_Base_C'"));
@@ -426,18 +428,14 @@ ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FO
 		else if (Obj->IsA(EModelInstance))
 		{
 			pActor = SpawnModelComponent(RawObj, World, ObjInfo);
+			if (!DWHasLoad)
+			{
+				SpawnDWModelComponent(World, ObjInfo);
+			}
 		}
-		//else if (Obj->IsA(EPointLight))	
-		//{
-		//	pActor = SpawnLightComponent(RawObj,World, ObjInfo);
-		//}
-		//else if (Obj->IsA(ESpotLight))
-		//{
-		//	pActor = SpawnLightComponent(RawObj, World, ObjInfo);
-		//}
 		else
 		{
-			pActor = SpawnLightComponent(RawObj, World, ObjInfo);
+			//pActor = SpawnLightComponent(RawObj, World, ObjInfo);
 		}
 	}
 
@@ -461,6 +459,14 @@ void UBuildingSystem::SetLightDataList(const FLightDatac LData)
 	if (Suite)
 	{
 		LightDataList.Add(LData);
+	}
+}
+
+void UBuildingSystem::SetDWDataList(const FDWDatac DWData)
+{
+	if (Suite)
+	{
+		DWDataList.Add(DWData);
 	}
 }
 
@@ -496,6 +502,33 @@ ADRActor * UBuildingSystem::SpawnModelComponent(IObject *RawObj, UWorld *MyWorld
 		ObjInfo.Actorts.Add(Actor);
 	}
 	return Actor;
+};
+
+//生成门窗模型
+void  UBuildingSystem::SpawnDWModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
+{
+	ADWActor *Actor = nullptr;
+	FTransform Tra;
+	for (int i = 0; i < DWDataList.Num(); ++i)
+	{
+		Tra.SetLocation(DWDataList[i].Loctioan);
+		Tra.SetScale3D(DWDataList[i].Scale);
+		ADWActor *Actor = MyWorld->SpawnActor<ADWActor>(ADWActor::StaticClass(), Tra);
+
+		if (Actor)
+		{			
+			Actor->Update(DWDataList[i].ResID);
+
+			FRotator RR;
+			RR.Pitch = DWDataList[i].Rotation.Yaw;
+			RR.Yaw = DWDataList[i].Rotation.Pitch;
+			RR.Roll = DWDataList[i].Rotation.Roll;
+			Actor->SetActorRotation(RR);
+
+			ObjInfo.Actorts.Add(Actor);
+		}
+	};
+	DWHasLoad = true;	
 };
 	
 //生成户型组件

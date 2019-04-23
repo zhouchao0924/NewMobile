@@ -51,6 +51,7 @@ enum class ERequestID :uint8
 	EQuerySeries,
 	EQueryGoodsByCond,
 	EQueryGoodsPageInfo,
+	EQueryReplace,
 };
 
 UCLASS(BlueprintType)
@@ -66,6 +67,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void QuerySolutions(const FBusinessHandle &BusinessHandle);
+
+	UFUNCTION(BlueprintCallable)
+	void QueryReplace(const FBusinessHandle &BusinessHandle, const TArray<float> &Skuids);
 
 	UFUNCTION(BlueprintCallable)
 	void QueryCategories(const FBusinessHandle &BusinessHandle);
