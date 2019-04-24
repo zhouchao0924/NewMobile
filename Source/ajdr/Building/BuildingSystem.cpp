@@ -435,7 +435,7 @@ ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FO
 		}
 		else
 		{
-			//pActor = SpawnLightComponent(RawObj, World, ObjInfo);
+			pActor = SpawnLightComponent(RawObj, World, ObjInfo);
 		}
 	}
 
