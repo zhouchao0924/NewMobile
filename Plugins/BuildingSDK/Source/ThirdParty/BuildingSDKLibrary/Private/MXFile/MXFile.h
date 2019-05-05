@@ -7,6 +7,7 @@
 #include "Class/Object.h"
 #include "Mesh/MeshObject.h"
 #include "Mesh/SurfaceObject.h"
+#include "Math/kString.h"
 
 enum EResType
 {
@@ -32,12 +33,12 @@ struct FResourceSummary
 	FResourceSummary();
 	EResType					ResType;
 	int							HeadVersion;
-	std::string					ResID;
-	std::string					ResourceName;
+	kString						ResID;
+	kString						ResourceName;
 	int							LocalVersion;
 	int							ModifyVersion;
-	bool						bCompressed;
-	std::vector<std::string>	Dependences;
+	unsigned char				CompressedFlag;
+	std::vector<kString>		Dependences;
 	int							BodyVersion;
 
 	struct {
@@ -110,6 +111,7 @@ class MXFile : public Object, public IMeshObjectCallback
 	};
 public:
 	MXFile();
+	EObjectType GetType() override { return EMXFile; }
 	FResourceSummary *GetSummary() { return &m_Header; }
 	static MXFile *LoadFromFile(const char *InFilename);
 	int   GetMeshCount() override { return (int)Meshes.size(); }
@@ -126,10 +128,11 @@ public:
 	ISurfaceObject *GetMeshSurface(int SurfaceID) override;
 	void Link(int SurfaceID, int SubModelIndex) override;
 	void UnLink(int SurfaceID, int SubModelIndex) override;
-protected:
+	void ClearUnrefTexture();
+public:
 	int								Id;
-	std::string						URL;
-	std::string						JsonStr;
+	kString							URL;
+	kString							JsonStr;
 	FViewLoc						ViewLoc;
 	FHeader							m_Header;
 	std::vector<SurfaceObject*>		m_Materials;
@@ -141,7 +144,7 @@ public:
 	int								WidthInMM;
 	int								HeightInMM;
 	kBox3D							LocalBounds;
-	std::string						Filename;
+	kString							Filename;
 	kVector3D						Scale3D;
 	std::vector<MeshObject*>		Meshes;
 };

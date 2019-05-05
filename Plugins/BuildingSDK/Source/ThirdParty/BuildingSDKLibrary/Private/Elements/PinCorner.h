@@ -11,7 +11,8 @@ public:
 	PinCorner();
 	EObjectType GetType() { return EPinCorner; }
 	bool IsDeletable() { return false; }
-	void MarkNeedUpdate() override;
+	bool IsFree() override;
+	void Update() override;
 public: 
 	ObjectID	OwnerID;
 };

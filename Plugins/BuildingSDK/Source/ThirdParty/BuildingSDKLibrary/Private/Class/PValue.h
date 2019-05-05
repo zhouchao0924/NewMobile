@@ -13,6 +13,7 @@ class PValue :public IValue
 			bool				bValue;
 			int					iValue;
 			float				fValue;
+			unsigned int		colValue;
 			std::vector<int>	*IntArray;
 			std::vector<kPoint>	*Vec2Array;
 			const char			*strValue0;
@@ -35,6 +36,7 @@ public:
 	~PValue();
 	PValue(int value);
 	PValue(float value);
+	PValue(kColor value);
 	PValue(const char *str);
 	PValue(std::string *str);
 	PValue(kVector3D *value);
@@ -44,6 +46,9 @@ public:
 	PValue(bool value);
 	PValue(kBox3D *InBox);
 	PValue(std::vector<int> *value);
+	PValue(const kArray<int> &value);
+	PValue(std::vector<kPoint> *value);
+	PValue(const kArray<kPoint> &value);
 	PValue(kPlane3D *value);
 
 	void Retain() override;
@@ -53,6 +58,7 @@ public:
 	int IntValue() const override;
 	float FloatValue() const override;
 	bool BoolValue() const override;
+	kColor ColorValue() const override;
 	kPoint Vec2Value() const override;
 	kVector3D Vec3Value() const override;
 	kVector4D Vec4Value() const override;
@@ -60,8 +66,8 @@ public:
 	kBox3D	Bounds() const override;
 	kPlane3D PlaneValue() const override;
 	const char *StrValue() const override;	
-	std::vector<int> &IntArrayValue() const override;
-	std::vector<kPoint> &Vec2ArrayValue() const override;
+	kArray<int> IntArrayValue() const override;
+	kArray<kPoint> Vec2ArrayValue() const override;
 	EVarType GetType() const override { return ValueType; }
 	int GetNumFields();
 	IValue &GetField(int Index);

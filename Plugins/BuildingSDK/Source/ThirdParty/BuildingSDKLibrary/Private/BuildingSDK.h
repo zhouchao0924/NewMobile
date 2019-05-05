@@ -3,15 +3,15 @@
 
 #include "Platform.h"
 #include "IBuildingSDK.h"
+#include "ITargetPlatform.h"
 #include "Transaction/Transaction.h"
 #include "Elements/SuiteImpl.h"
 #include "Class/ValueFactory.h"
-#include "Importer/ImporterImpl.h"
 
-class BuildingSDK :public IBuildingSDK
+class BuildingSDKImpl :public IBuildingSDK
 {
 public:
-	BuildingSDK();
+	BuildingSDKImpl();
 	bool Initialize() override;
 	void UnInitialize() override;
 	ISuite *CreateSuite() override;
@@ -23,13 +23,13 @@ public:
 	void SetTransaction(ITransact *InTransaction) override;
 	IObject *LoadFile(const char *Filename) override;
 	IValueFactory *GetValueFactory() override;
-	IImporter *GetImporter() override;
+	ITargetPlatform *GetPlatform(ETargetPlatform PlatformType) override;
 protected:
-	ITransact	   *_Transaction;
-	ValueFactory	_ValueFactoy;
-	bool			_bInitialized;
-	ImporterImpl	_Importer;
-	std::vector<SuiteImpl *> _Suites;
+	ITransact						*_Transaction;
+	ValueFactory					_ValueFactoy;
+	bool							_bInitialized;
+	std::vector<SuiteImpl *>		_Suites;
+	std::vector<ITargetPlatform *>	_Platforms;
 };
 
 

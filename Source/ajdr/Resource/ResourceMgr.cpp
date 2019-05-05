@@ -1,4 +1,4 @@
-
+﻿
 #include "ajdr.h"
 #include "ResourceMgr.h"
 #include "ModelFile.h"
@@ -224,9 +224,11 @@ void UResourceMgr::AsyncDownloadRes(const FString &Filename, const FString &Resi
 bool UResourceMgr::IsInLocalHas(const FString &filename)
 {
 	FString savepath= FPaths::ProjectSavedDir();
+	FString contentpath = FPaths::ProjectContentDir();
 	FString p1 = savepath +"Resources/Local/"+ filename;
 	FString p2 = savepath + "Download/Resources/" + filename;
-	return IFileManager::Get().FileExists(*p1)|| IFileManager::Get().FileExists(*p2);
+	FString p3 = contentpath + "Geometry/" + filename;
+	return IFileManager::Get().FileExists(*p1)|| IFileManager::Get().FileExists(*p2) || IFileManager::Get().FileExists(*p3);
 		
 }
 

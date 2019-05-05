@@ -2,6 +2,7 @@
 #pragma once
 
 #include "IMeshObject.h"
+#include "Math/kString.h"
 
 struct FUCXData
 {
@@ -48,6 +49,7 @@ struct FSaveMaterialInfo
 {
 	std::vector<int>		SectionRefs;
 	std::vector<ObjectID>	Surfaces;
+	void Serialize(ISerialize &Ar, int Ver);
 };
 
 class MeshObject : public IMeshObject
@@ -68,7 +70,9 @@ public:
 	void AddSection(int NumSection);
 	bool HitTest(const kVector3D &RayStart, const kVector3D &RayDir, int *OutSectionIndex = nullptr, kVector3D *OutPosition = nullptr, kVector3D *OutNormal = nullptr);
 	FMeshSection *GetSection(int SectionIndex);
-	int GetNumSections();
+	int  GetNumSections();
+	void GetMaterials(FSaveMaterialInfo &SavedMaterial);
+	void SetMaterials(FSaveMaterialInfo &SavedMaterial);
 public:
 	void Serialize(ISerialize &Ar, int Ver);
 	void SerializeAggGeom(ISerialize &Ar, int Ver);
@@ -85,7 +89,7 @@ protected:
 	int  GetSurfaceUseCount(int SurfaceIndex);
 	void ReIndices();
 protected:
-	std::string					Name;
+	kString						Name;
 	std::vector<ObjectID>		Surfaces;
 	std::vector<FMeshSection *>	Meshes;
 	kBox3D						Bounds;

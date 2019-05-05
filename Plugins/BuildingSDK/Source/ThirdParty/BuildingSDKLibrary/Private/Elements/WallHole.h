@@ -14,14 +14,18 @@ public:
 	bool IsDeletable() override { return true; }
 	void OnDestroy() override;
 	EObjectType GetType() { return EWallHole; }
+	bool GetRange(float &MinX, float &MaxX);
 	void GetPolygon(kPoint *&pPolygon, int &Num);
+	void GetBorderLines(kLine &l_Left, kLine &l_Right);
+	void UpdateTransform(ModelInstance *pModel) override;
+	IValue *GetFunctionProperty(const std::string &name) override;
 public:
-	ObjectID WallID;
 	float	 ZPos;
 	float	 Width;
 	float	 Height;
 	float	 Thickness;
-	bool	 bFlip;
+	bool	 bHorizonalFlip;
+	bool	 bVerticalFlip;
 	std::vector<kPoint> polygons;
 };
 

@@ -1,8 +1,12 @@
 
 
 #include "MXTexture.h"
+#include "Math/kString.h"
 
-std::string GetTexSlotName(ETexSlot Slot)
+extern void SaveBool(ISerialize &Ar, bool bValue);
+extern bool LoadBool(ISerialize &Ar);
+
+kString GetTexSlotName(ETexSlot Slot)
 {
 	switch (Slot)
 	{
@@ -16,6 +20,11 @@ std::string GetTexSlotName(ETexSlot Slot)
 	default: break;
 	}
 	return "";
+}
+
+void FTextureSourceInfo::StripRawData()
+{
+	Data.clear();
 }
 
 void FTextureSourceInfo::Reset()
@@ -38,28 +47,30 @@ void FTextureSourceInfo::Init(int Width, int Height, ETextureFormat InFormat, bo
 	memcpy(&Data[0], InData, NumBytes);
 }
 
-extern bool LoadBool(ISerialize &Ar);
-
 void FTextureSourceInfo::Serialize(ISerialize &Ar, int Ver)
 {
 	if (Ar.IsSaving())
 	{
 		Ar << SizeX;
 		Ar << SizeY;
-		Ar << SRGB;
-		Ar << CompressionNoAlpha;
-		Ar << bDitherMipMapAlpha;
-		Ar << bUseLegacyGamma;
+
+		SaveBool(Ar, SRGB);
+		SaveBool(Ar, CompressionNoAlpha);
+		SaveBool(Ar, bDitherMipMapAlpha);
+		SaveBool(Ar, bUseLegacyGamma);
 
 		unsigned char ByteFormat = (unsigned char)SourceFormat;
 		Ar << ByteFormat;
 
-		ByteFormat = 0;
-		Ar << ByteFormat;
+		unsigned char CompressionSettings = 0;
+		Ar << CompressionSettings;
 
 		int NumBytes = Data.size();
 		Ar << NumBytes;
-		Ar.Serialize(&Data[0], NumBytes * sizeof(unsigned char));
+		if (!Data.empty())
+		{
+			Ar.Serialize(&Data[0], NumBytes * sizeof(unsigned char));
+		}
 
 		int NumImages = CompressedImages.size();
 		Ar << NumImages;
@@ -73,7 +84,10 @@ void FTextureSourceInfo::Serialize(ISerialize &Ar, int Ver)
 
 			NumBytes = Image.RawData.size();
 			Ar << NumBytes;
-			Ar.Serialize(&Image.RawData[0], Image.RawData.size());
+			if (!Image.RawData.empty())
+			{
+				Ar.Serialize(&Image.RawData[0], Image.RawData.size());
+			}
 		}
 	}
 	else if (Ar.IsLoading())
@@ -96,7 +110,10 @@ void FTextureSourceInfo::Serialize(ISerialize &Ar, int Ver)
 		int NumBytes = 0;
 		Ar << NumBytes;
 		Data.resize(NumBytes);
-		Ar.Serialize(&Data[0], NumBytes * sizeof(unsigned char));
+		if (!Data.empty())
+		{
+			Ar.Serialize(&Data[0], NumBytes * sizeof(unsigned char));
+		}
 
 		int NumImages = 0;
 		Ar << NumImages;

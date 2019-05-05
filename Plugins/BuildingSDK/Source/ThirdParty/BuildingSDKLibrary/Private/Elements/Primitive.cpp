@@ -31,9 +31,38 @@ bool Primitive::IsVisible()
 	return bVisible;
 }
 
-void Primitive::Serialize(ISerialize &Ar)
+void Primitive::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	BuildingObject::Serialize(Ar);
+	BuildingObject::Serialize(Ar, Ver);
+
+	BeginChunk<Primitive>(Ar);
+
+	bool HasMesh = false;
+
+	if (Ar.IsSaving())
+	{
+		HasMesh = (Mesh != nullptr);
+		Ar << HasMesh;
+		if (Mesh)
+		{
+			FSaveMaterialInfo SavedMaterialInfo;
+			Mesh->GetMaterials(SavedMaterialInfo);
+			SavedMaterialInfo.Serialize(Ar, Ver);
+		}
+	}
+	else if (Ar.IsLoading())
+	{
+		Ar << HasMesh;
+		if (HasMesh)
+		{
+			InitMesh();
+			FSaveMaterialInfo SavedMaterialInfo;
+			SavedMaterialInfo.Serialize(Ar, Ver);
+			Mesh->SetMaterials(SavedMaterialInfo);
+		}
+	}
+
+	EndChunk<Primitive>(Ar);
 }
 
 void Primitive::SetVisible(bool bInVisible)
@@ -67,10 +96,10 @@ void Primitive::UnLinkAllSurface()
 	}
 }
 
-void Primitive::MarkNeedUpdate()
+void Primitive::Update()
 {
 	ClearCached();
-	BuildingObject::MarkNeedUpdate();
+	BuildingObject::Update();
 }
 
 void Primitive::ConditonBuild()
@@ -86,13 +115,18 @@ void Primitive::ConditonBuild()
 	}
 }
 
-FMeshSection *Primitive::AddMesh()
+void Primitive::InitMesh()
 {
 	if (!Mesh)
 	{
 		Mesh = new MeshObject(this);
 		Mesh->SetMeshObjectCallback(this);
 	}
+}
+
+FMeshSection *Primitive::AddMesh()
+{
+	InitMesh();
 	return Mesh->AddMesh();
 }
 

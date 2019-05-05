@@ -1,4 +1,4 @@
-ï»¿
+
 #include <map>
 #include "SuiteImpl.h"
 #include "Wall.h"
@@ -19,6 +19,10 @@
 #include "ITransaction.h"
 #include "MXFile/MXFile.h"
 #include "Class/PValue.h"
+#include "PointLight.h"
+#include "SpotLight.h"
+#include "SkyLight.h"
+#include "PostProcess.h"
 
 #define OBJ_CHUNK	1
 
@@ -31,12 +35,7 @@ SuiteImpl::SuiteImpl()
 {
 	_ClassLibaray.InitClassLibaray();
 
-	BuildingConfig *pConfig = (BuildingConfig *)CreateObject(EBuildingConfig, true);
-	if (pConfig)
-	{
-		_ConfigID = pConfig->GetID();
-		OnCreate(pConfig);
-	}
+	_ValidCreateGlobalObject();
 
 	ITransact *Transaction = GetBuildingSDK()->GetTransaction();
 	if (Transaction)
@@ -150,14 +149,11 @@ void SuiteImpl::DeleteObj(BuildingObject *Obj)
 	}
 }
 
-void SuiteImpl::UpdateObj(BuildingObject *Obj)
+void SuiteImpl::UpdateObj(BuildingObject *Obj, EChannelMask Mask /*= EChannelAll*/)
 {
-	if (Obj)
+	if (Obj && _Listener)
 	{
-		if (_Listener)
-		{
-			_Listener->OnUpdateObject(Obj);
-		}
+		_Listener->OnUpdateObject(Obj, Mask);
 	}
 }
 
@@ -171,15 +167,18 @@ void SuiteImpl::Update()
 			_Listener->OnAddObject(pObj);
 		}
 
-		for (ObjectMap::iterator it = _ObjMap.begin(); it != _ObjMap.end(); ++it)
+		for (DeferredUpdateMap::iterator it = _DeferredUpdateMap.begin(); it != _DeferredUpdateMap.end(); ++it)
 		{
-			BuildingObject *pObj = it->second;
-			if (pObj && pObj->bNeedUpdate)
+			FDeferredObjectInfo &ObjInfo = it->second;
+			BuildingObject *pObj = GetObject(ObjInfo.ID);
+			if (pObj)
 			{
-				pObj->bNeedUpdate = false;
-				_Listener->OnUpdateObject(pObj);
+				pObj->Update();
+				UpdateObj(pObj, EChannelMask(ObjInfo.Mask));
+				pObj->_bNeedUpdate = false;
 			}
 		}
+		_DeferredUpdateMap.clear();
 	}
 
 	_PendingAddObjects.clear();
@@ -279,7 +278,7 @@ public:
 			{
 				int foundIndex = -1;
 
-				Wall *pWall = GET_BUILDING_OBJ(Suite, p0->ConnectedWalls[k], Wall);
+				Wall *pWall = GET_BUILDING_OBJ(Suite, p0->ConnectedWalls[k].WallID, Wall);
 				for (int j = 0; j < 2; ++j)
 				{
 					if (pWall->P[j] == p1->GetID())
@@ -404,7 +403,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 			angles.resize(n - 1);
 			projDist.resize(n - 1);
 
-			float wallAngle = pCorner->Angles[index];
+			float wallAngle = pCorner->ConnectedWalls[index].Angle;
 
 			kPoint PreWallFoward;
 			GetWallForwardFromCorner(PreWall->GetID(), pCorner->GetID(), PreWallFoward);
@@ -413,7 +412,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 			int k = 0;
 			for (size_t i = 0; i < pCorner->ConnectedWalls.size(); ++i)
 			{
-				ObjectID Id = pCorner->ConnectedWalls[i];
+				ObjectID Id = pCorner->ConnectedWalls[i].WallID;
 				if (Id != WallID)
 				{
 					kPoint Forward;
@@ -430,7 +429,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 				}
 			}
 
-			//ç›¸å¯¹è§’åº¦æ’åº
+			//Ïà¶Ô½Ç¶ÈÅÅĞò
 			for (size_t i = 0; i < walls.size(); ++i)
 			{
 				for (size_t j = walls.size() - 1; j > i; --j)
@@ -446,12 +445,15 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 	}
 	else
 	{
-		walls = pCorner->ConnectedWalls;
+		for (size_t i = 0; i < pCorner->ConnectedWalls.size(); ++i)
+		{
+			walls.push_back(pCorner->ConnectedWalls[i].WallID);
+		}
 	}
 
 	Context.pushState();
 
-	//æŒ‰ç…§ä¼˜å…ˆçº§æŸ¥æ‰¾å°é—­çš„åŒºåŸŸ
+	//°´ÕÕÓÅÏÈ¼¶²éÕÒ·â±ÕµÄÇøÓò
 	for (size_t i = 0; i < walls.size(); ++i)
 	{
 		Context.useState();
@@ -483,7 +485,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 			continue;
 		}
 
-		if (Context.PathCorners.size() >= 2)
+		if (/*NextCorner->ConnectedWalls.size()>2 &&*/ Context.PathCorners.size() >= 2)
 		{
 			int n = (int)Context.PathCorners.size();
 			kPoint V0 = (Context.PathCorners[n - 1]->GetLocation() - Context.PathCorners[n - 2]->GetLocation()).Normalize();
@@ -502,7 +504,7 @@ void SuiteImpl::SearchShortestArea(Wall *PreWall, Corner *pCorner, FSearchContex
 				}
 				else
 				{
-					if (fDot <= 0)//å†æ¬¡å¼€å¯æ£€æµ‹
+					if (fDot <= 0)//ÔÙ´Î¿ªÆô¼ì²â
 					{
 						Context.bCheckCCW = false;
 					}
@@ -645,7 +647,7 @@ public:
 
 		for (size_t i = 0; i < Rooms.size(); ++i)
 		{
-			impl->DeleteObject(Rooms[i]);
+			impl->DeleteObject(Rooms[i], true);
 		}
 
 		Walls.clear();
@@ -801,48 +803,39 @@ Corner *SuiteImpl::_AddCorner(float x, float y, bool bSnapCheck)
 	return pCorner;
 }
 
-ObjectID SuiteImpl::AddModelToObject(ObjectID BaseObjID, const char *ResID, const kVector3D &Location, const kRotation &Rotation, const kVector3D &Scale, int Type /*= -1*/)
+ObjectID SuiteImpl::AddModelToObject(ObjectID BaseObjID, const char *ResID, const kVector3D &Location, const kRotation &Rotation, const kVector3D &Size, int Type /*= -1*/)
 {
-	Anchor * pAnchor = nullptr;
-
-	if (BaseObjID != INVALID_OBJID)
-	{
-		BuildingObject *pObj = GetObject(BaseObjID);
-		if (pObj && pObj->GetMeshObject(0))
-		{
-			Primitive *pPrim = (Primitive *)pObj;
-			pAnchor = pPrim->CreateAnchor(Location);
-			if (pAnchor)
-			{
-				pPrim->Anchors.push_back(pAnchor->GetID());
-			}
-		}
-	}
+	ObjectID  ModelID = INVALID_OBJID;
+	kVector3D Forward = (*((kVector3D*)&Rotation)).ToDirection();
 
 	ModelInstance *pModel = ResID ? (ModelInstance *)CreateObject(EModelInstance, true) : nullptr;
 	if (pModel)
 	{
-		if (pAnchor)
-		{
-			pAnchor->Link(pModel);
-		}
-		else
-		{
-			pModel->Location = Location;
-			pModel->Scale = Scale;
-			pModel->Forward = (*((kVector3D*)&Rotation)).ToDirection();
-		}
-			
+		pModel->Location = Location;
+		pModel->Size = Size;
+		pModel->Forward = Forward;
 		pModel->Type = Type;
 		pModel->ResID = ResID;
+	}
 
+	BuildingObject *pObj = GetObject(BaseObjID);
+	Anchor *pAnchor = pObj? pObj->CreateAnchor() : nullptr;
+	if (pAnchor)
+	{
+		pAnchor->Link(pModel);
+		pObj->MarkNeedUpdate();
+	}
+
+	if (pModel)
+	{
+		ModelID = pModel->GetID();
 		OnCreate(pModel);
 	}
 
-	return pModel ? pModel->GetID() : INVALID_OBJID;
+	return ModelID;
 }
 
-ObjectID SuiteImpl::AddModelToAnchor(ObjectID AnchorID, const char *ResID, const kVector3D &Location, const kRotation &Rotation, const kVector3D &Scale, int Type /*= -1*/)
+ObjectID SuiteImpl::AddModelToAnchor(ObjectID AnchorID, const char *ResID, const kVector3D &Location, const kRotation &Rotation, const kVector3D &Size, int Type /*= -1*/)
 {
 	ModelInstance *pModel = nullptr;
 	Anchor * pAnchor = GET_BUILDING_OBJ(this, AnchorID, Anchor);
@@ -855,6 +848,7 @@ ObjectID SuiteImpl::AddModelToAnchor(ObjectID AnchorID, const char *ResID, const
 			pModel->Type = Type;
 			pAnchor->Link(pModel);
 			pModel->ResID = ResID;
+			pModel->Size = Size;
 			OnCreate(pModel);
 		}
 	}
@@ -958,7 +952,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 		kPoint P0 = s->GetLocation();
 		kPoint P1 = e->GetLocation();
 
-		//å¾—åˆ°å¯é€‰å¢™ä½“
+		//µÃµ½¿ÉÑ¡Ç½Ìå
 		std::vector<FWallHoleInfo> Holes;
 		std::vector<ObjectID> Splits;
 		std::vector<float>	  SplitDists;
@@ -983,7 +977,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			pWall->GetLocations(wP0, wP1);
 
 			kPoint wD = wP1 - wP0;
-			float wSQL = wD.SizeSquared(); //å¢™ä½“é•¿åº¦ä¸ºé›¶
+			float wSQL = wD.SizeSquared(); //Ç½Ìå³¤¶ÈÎªÁã
 			if (wSQL <= 0)
 			{
 				continue;
@@ -992,7 +986,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			float  wL = std::sqrt(wSQL);
 			kPoint nD = wD*(1.0f / wL);
 
-			//è¿æ¥çº¿ä¸Š
+			//Á¬½ÓÏßÉÏ
 			kPoint DL0 = P0 - wP0;
 			float  fDot0 = DL0.Dot(nD);
 			kPoint Dir = DL0.Normalize();
@@ -1023,13 +1017,13 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 				continue;
 			}
 
-			//æ£€æµ‹ç›¸äº¤
+			//¼ì²âÏà½»
 			kPoint wD0 = P0 - wP0;
 			kPoint wD1 = P1 - wP0;
 			float c0 = kPoint::CrossProduct(wD, wD0);
 			float c1 = kPoint::CrossProduct(wD, wD1);
 
-			if (c0*c1 > 0)	//ä¸ç›¸äº¤
+			if (c0*c1 > 0)	//²»Ïà½»
 			{
 				continue;
 			}
@@ -1042,12 +1036,12 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 
 			float lr = d0 / (d0 + d1);
 			kPoint IntersecPos = (P1 - P0)*lr + P0;
-			if (!IsBetweenPoint(IntersecPos, wP0, wP1, wSQL)) //ç›¸äº¤ç‚¹åœ¨å¢™ä½“å¤–éƒ¨
+			if (!IsBetweenPoint(IntersecPos, wP0, wP1, wSQL)) //Ïà½»µãÔÚÇ½ÌåÍâ²¿
 			{
 				continue;
 			}
 
-			//åˆ†å‰²æ—§å¢™ä½“
+			//·Ö¸î¾ÉÇ½Ìå
 			ObjectID E = pWall->P[1];
 			Corner *NewCorner = _AddCorner(IntersecPos.x, IntersecPos.y, true);
 			if (!NewCorner)
@@ -1063,7 +1057,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 				InnerAddWall(pWall->GetType(), SplitID, E, pWall->GetThickLeft(), pWall->GetThickRight(), pWall->GetHeight(0), &Holes);
 			}
 
-			//è®°å½•åˆ†å‰²ç‚¹ , æ’å…¥åˆé€‚çš„ä½ç½®
+			//¼ÇÂ¼·Ö¸îµã , ²åÈëºÏÊÊµÄÎ»ÖÃ
 			float sp_dist = (IntersecPos - P0).SizeSquared();
 			size_t n = SplitDists.size();
 			Splits.resize(n + 1);
@@ -1085,7 +1079,7 @@ void SuiteImpl::_AddWall(EObjectType WallType, ObjectID StartCorner, ObjectID En
 			SplitDists[k] = sp_dist;
 		}
 
-		//ç”Ÿæˆåˆ‡å‰²åæ–°çš„å¢™ä½“
+		//Éú³ÉÇĞ¸îºóĞÂµÄÇ½Ìå
 		ObjectID CornerID = StartCorner;
 		for (size_t i = 0; i < Splits.size(); ++i)
 		{
@@ -1109,8 +1103,9 @@ ObjectID SuiteImpl::AddWindow(ObjectID WallID, const kPoint &Location, float zPo
 			pCorner->OwnerID = pWall->GetID();
 
 			pWindow = (Window *)CreateObject(EWindow, true);
-			pWindow->CornerID = pCorner->GetID();
-			pCorner->RelativeID = pWindow->GetID();
+			pWindow->SetCorner(0, pCorner->GetID());
+			pCorner->OwnerID = pWindow->GetID();
+			
 			pWall->AddHole(pWindow, Location, zPos, Height, Width);
 			pWall->MarkNeedUpdate();
 
@@ -1137,12 +1132,12 @@ ObjectID SuiteImpl::AddDoor(ObjectID WallID, const kPoint &Location, float Width
 		if (pCorner)
 		{
 			pCorner->Location = Location;
-			pCorner->OwnerID = pWall->GetID();
 
 			pDoor = (DoorHole *)CreateObject(EDoorHole, true);
-			pDoor->WallID = WallID;
-			pDoor->CornerID = pCorner->GetID();
-			pCorner->RelativeID = pDoor->GetID();
+			pDoor->OwnerID = WallID;
+			pDoor->SetCorner(0, pCorner->GetID());
+			pCorner->OwnerID = pDoor->GetID();
+
 			pWall->AddHole(pDoor, Location, zPos, Height, Width);
 			pWall->MarkNeedUpdate();
 
@@ -1217,7 +1212,7 @@ void SuiteImpl::AddSkirting(Room *pRoom)
 	if (pSkirtingCeil)
 	{
 		pRoom->SkirtingCielID = pSkirtingCeil->GetID();
-		pSkirtingCeil->RoomID = pRoom->GetID();
+		pSkirtingCeil->OwnerID = pRoom->GetID();
 		pSkirtingCeil->Extent = cfg.SkirtingCeilExt;
 		pSkirtingCeil->SkirtingType = ESkirtingTop;
 		pSkirtingCeil->SkirtingResID = cfg.SkirtingCeil;
@@ -1228,7 +1223,7 @@ void SuiteImpl::AddSkirting(Room *pRoom)
 	if (pSkirtingFloor)
 	{
 		pRoom->SkirtingFloorID = pSkirtingFloor->GetID();
-		pSkirtingFloor->RoomID = pRoom->GetID();
+		pSkirtingFloor->OwnerID = pRoom->GetID();
 		pSkirtingFloor->Extent = cfg.SkirtingFloorExt;
 		pSkirtingFloor->SkirtingType = ESkirtingBottom;
 		pSkirtingFloor->SkirtingResID = cfg.SkirtingFloor;
@@ -1344,7 +1339,7 @@ bool SuiteImpl::Move(ObjectID ObjID, const kPoint &DeltaMove)
 	return bSuccess;
 }
 
-int SuiteImpl::GetAllObjects(IObject **&ppObjects, EObjectType InClass /*= EUnkownObject*/)
+int SuiteImpl::GetAllObjects(IObject **&ppObjects, EObjectType InClass /*= EUnkownObject*/, bool bIncludeDeriveType /*= true*/)
 {
 	static std::vector<IObject *> AllObjects;
 	AllObjects.clear();
@@ -1354,7 +1349,7 @@ int SuiteImpl::GetAllObjects(IObject **&ppObjects, EObjectType InClass /*= EUnko
 	for (ObjectMap::iterator it = _ObjMap.begin(); it != _ObjMap.end(); ++it)
 	{
 		BuildingObject *Obj = it->second;
-		if (Obj && (!InClass || Obj->IsA(InClass)))
+		if (Obj && (!InClass || (bIncludeDeriveType && Obj->IsA(InClass)) || (!bIncludeDeriveType && Obj->GetType()==InClass)))
 		{
 			AllObjects.push_back(Obj);
 		}
@@ -1404,14 +1399,15 @@ void SuiteImpl::Serialize(ISerialize &Ar)
 			if (Obj)
 			{
 				int ID = Obj->GetID();
-				Ar << ID;
 				int ObjType = Obj->GetType();
+				unsigned int Ver = Obj->GetVersion();
+
+				Ar << ID;
 				Ar << ObjType;
+				Ar << Ver;
 
- 				Ar.WriteChunk(OBJ_CHUNK);
-				Obj->Serialize(Ar);
- 				Ar.EndChunk(OBJ_CHUNK);
-
+				Obj->Serialize(Ar, Ver);
+				
 				++nObj;
 			}
 		}
@@ -1433,42 +1429,79 @@ void SuiteImpl::Serialize(ISerialize &Ar)
 		{
 			int ID = 0;
 			int ObjType = 0;
+			unsigned int Ver = 0;
+			
 			Ar << ID;
 			Ar << ObjType;
-			int ChunkID = Ar.ReadChunk();
+			Ar << Ver;
 
 			BuildingObject *ObjToLoad = CreateObject((EObjectType)ObjType, false);
 			if (ObjToLoad)
 			{
-				if (ChunkID == OBJ_CHUNK)
+				ObjToLoad->Serialize(Ar, Ver);
+
+				ObjToLoad->SetID(ID);
+				OnCreate(ObjToLoad);
+				
+				if (ObjToLoad->IsA(EBuildingConfig))
 				{
-					ObjToLoad->Serialize(Ar);
-					ObjToLoad->SetID(ID);
-					OnCreate(ObjToLoad);
-					if (ObjToLoad->IsA(EBuildingConfig))
-					{
-						_ConfigID = ID;
-					}
-				}
-				else
-				{
-					DeleteObj(ObjToLoad);
-					Ar.SkipChunk();
+					_ConfigID = ID;
 				}
 			}
-			Ar.EndChunk(ChunkID);
+		}
+
+		_ValidCreateGlobalObject();
+	}
+}
+
+void SuiteImpl::_ValidCreateGlobalObject()
+{
+	BuildingConfig *pConfig = (BuildingConfig *)GetObject(_ConfigID, EBuildingConfig);
+	if (!pConfig)
+	{
+		_ConfigID = INVALID_OBJID;
+		pConfig = (BuildingConfig *)CreateObject(EBuildingConfig, true);
+		if (pConfig)
+		{
+			_ConfigID = pConfig->GetID();
+			OnCreate(pConfig);
+		}
+	}
+
+	if (pConfig)
+	{
+		if (pConfig->SkyLight == INVALID_OBJID)
+		{
+			SkyLight *pSkyLight = (SkyLight *)CreateObject(ESkyLight);
+			if (pSkyLight)
+			{
+				pConfig->SkyLight = pSkyLight->GetID();
+				OnCreate(pSkyLight);
+			}
+		}
+
+		if (pConfig->PostProcess == INVALID_OBJID)
+		{
+			PostProcess *pPostProcess = (PostProcess *)CreateObject(EPostProcess);
+			if (pPostProcess)
+			{
+				pConfig->PostProcess = pPostProcess->GetID();
+				OnCreate(pPostProcess);
+			}
 		}
 	}
 }
 
-void SuiteImpl::Load(const char *Filename)
+bool SuiteImpl::Load(const char *Filename)
 {
 	ISerialize *Reader = GetBuildingSDK()->CreateFileReader(Filename);
 	if (Reader)
 	{
 		Serialize(*Reader);
 		Reader->Close();
+		return true;
 	}
+	return false;
 }
 
 void SuiteImpl::Save(const char *Filename)
@@ -1489,7 +1522,7 @@ ObjectID SuiteImpl::GetWallByTwoCorner(ObjectID CornerID0, ObjectID CornerID1)
 	{
 		for (size_t i = 0; i < pCorner0->ConnectedWalls.size(); ++i)
 		{
-			ObjectID WallID = pCorner0->ConnectedWalls[i];
+			ObjectID WallID = pCorner0->ConnectedWalls[i].WallID;
 			Wall *pWall = GET_BUILDING_OBJ(this, WallID, Wall);
 			if (pWall)
 			{
@@ -1515,7 +1548,7 @@ int SuiteImpl::GetConnectWalls(ObjectID CorerID, ObjectID *&pConnectedWalls)
 	if (pCorner)
 	{
 		nWall = (int)pCorner->ConnectedWalls.size();
-		pConnectedWalls = &(pCorner->ConnectedWalls[0]);
+		pConnectedWalls = &(pCorner->ConnectedWalls[0].WallID);
 	}
 	else
 	{
@@ -1622,7 +1655,7 @@ ObjectID SuiteImpl::FindCloseWall(const kPoint &Location, float Width, kPoint &B
 			kPoint Dir = P10 / Len10;
 			float fDot = Dir.Dot(PL0);
 
-			//åœ¨å¢™ä½“å†…éƒ¨,ä¸”ä¸åœ¨å¢™æ´å†…
+			//ÔÚÇ½ÌåÄÚ²¿,ÇÒ²»ÔÚÇ½¶´ÄÚ
 			if ( fDot > 0 && fDot < Len10 && 
 					pWall->HitTestHole(fDot)==INVALID_OBJID) 
 			{
@@ -1728,7 +1761,7 @@ ObjectID SuiteImpl::GetConnectCorner(ObjectID Wall0, ObjectID Wall1, bool &bWall
 		Corner *pCorner00 = GET_BUILDING_OBJ(this, pWall0->P[0], Corner);
 		for (size_t i = 0; i < pCorner00->ConnectedWalls.size(); ++i)
 		{
-			if (pCorner00->ConnectedWalls[i] == Wall1)
+			if (pCorner00->ConnectedWalls[i].WallID == Wall1)
 			{
 				bWall1InverseConnect = false;
 				return pWall0->P[0];
@@ -1738,7 +1771,7 @@ ObjectID SuiteImpl::GetConnectCorner(ObjectID Wall0, ObjectID Wall1, bool &bWall
 		Corner *pCorner01 = GET_BUILDING_OBJ(this, pWall0->P[1], Corner);
 		for (size_t i = 0; i < pCorner01->ConnectedWalls.size(); ++i)
 		{
-			if (pCorner01->ConnectedWalls[i] == Wall1)
+			if (pCorner01->ConnectedWalls[i].WallID == Wall1)
 			{
 				bWall1InverseConnect = true;
 				return pWall0->P[1];
@@ -2065,7 +2098,7 @@ int SuiteImpl::HitTest(const kPoint &Min, const kPoint &Max, ObjectID *&pResults
 	std::vector<Corner *> Corners;
 	_SparseMap.FindByBox2D(Min, Max, Corners);
 
-	std::set<ObjectID> walls;
+	std::set<ObjectID> intersecObjs;
 
 	for (int i = 0; i < Corners.size(); ++i)
 	{
@@ -2074,13 +2107,20 @@ int SuiteImpl::HitTest(const kPoint &Min, const kPoint &Max, ObjectID *&pResults
 		{
 			for (size_t i = 0; i < pCorner->ConnectedWalls.size(); ++i)
 			{
-				ObjectID WallID = pCorner->ConnectedWalls[i];
+				ObjectID WallID = pCorner->ConnectedWalls[i].WallID;
 
-				if (walls.find(WallID)==walls.end())
+				if (intersecObjs.find(WallID) == intersecObjs.end())
 				{
-					walls.insert(WallID);
+					intersecObjs.insert(WallID);
 				}
 			}
+
+			if (pCorner->IsA(EPinCorner))
+			{
+				PinCorner *pinCorner = (PinCorner *)pCorner;
+				intersecObjs.insert(pinCorner->OwnerID);
+			}
+
 			OutResults.push_back(pCorner->GetID());
 		}
 	}
@@ -2090,7 +2130,7 @@ int SuiteImpl::HitTest(const kPoint &Min, const kPoint &Max, ObjectID *&pResults
 		BuildingObject *pObj = it->second;
 		if (pObj->IsA(EWall))
 		{
-			if (walls.find(pObj->GetID()) == walls.end())
+			if (intersecObjs.find(pObj->GetID()) == intersecObjs.end())
 			{
 				Wall *pWall = (Wall *)pObj;
 
@@ -2099,17 +2139,36 @@ int SuiteImpl::HitTest(const kPoint &Min, const kPoint &Max, ObjectID *&pResults
 
 				if (IsLineIntersecBox(l_left, Min, Max))
 				{
-					walls.insert(pWall->GetID());
+					intersecObjs.insert(pWall->GetID());
 				}
 				else if(IsLineIntersecBox(l_right, Min, Max))
 				{
-					walls.insert(pWall->GetID());
+					intersecObjs.insert(pWall->GetID());
+				}
+			}
+		}
+		else if (pObj->IsA(EWallHole))
+		{
+			if (intersecObjs.find(pObj->GetID()) == intersecObjs.end())
+			{
+				WallHole *pHole = (WallHole *)pObj;
+
+				kLine l_left, l_right;
+				pHole->GetBorderLines(l_left, l_right);
+
+				if (IsLineIntersecBox(l_left, Min, Max))
+				{
+					intersecObjs.insert(pHole->GetID());
+				}
+				else if (IsLineIntersecBox(l_right, Min, Max))
+				{
+					intersecObjs.insert(pHole->GetID());
 				}
 			}
 		}
 	}
 
-	for (std::set<ObjectID>::iterator it = walls.begin(); it!=walls.end(); ++it)
+	for (std::set<ObjectID>::iterator it = intersecObjs.begin(); it!=intersecObjs.end(); ++it)
 	{
 		OutResults.push_back(*it);
 	}
@@ -2129,9 +2188,9 @@ int SuiteImpl::HitTest(const kPoint &Min, const kPoint &Max, ObjectID *&pResults
 IValue &SuiteImpl::GetProperty(ObjectID ID, const char *PropertyName)
 {
 	BuildingObject *pObj = (BuildingObject *)GetObject(ID);
-	if (pObj && pObj->ClsDesc)
+	if (pObj && pObj->_ClsDesc)
 	{
-		ObjectDesc *Desc = pObj->ClsDesc;
+		ObjectDesc *Desc = pObj->_ClsDesc;
 		while (Desc)
 		{
 			IProperty *Prop = Desc->GetProperty(PropertyName);
@@ -2155,9 +2214,9 @@ IValue &SuiteImpl::GetProperty(ObjectID ID, const char *PropertyName)
 void SuiteImpl::SetProperty(ObjectID ID, const char *PropertyName, const IValue *Value)
 {
 	BuildingObject *pObj = GetObject(ID);
-	if (pObj && pObj->ClsDesc)
+	if (pObj && pObj->_ClsDesc)
 	{
-		ObjectDesc *Desc = pObj->ClsDesc;
+		ObjectDesc *Desc = pObj->_ClsDesc;
 		while (Desc)
 		{
 			IProperty *Prop = Desc->GetProperty(PropertyName);
@@ -2202,6 +2261,75 @@ void SuiteImpl::NotifySurfaceValueChanged(ObjectID PrimID, int SubSection)
 			_Listener->OnUpdateSurfaceValue(pObj, SubSection, SurfaceID);
 		}
 	}
+}
+
+ObjectID SuiteImpl::AddPointLight(const kVector3D &Location, float SourceRadius, float SoftSourceRadius, float SourceLength, float Intensity, kColor LightColor, bool bCastShadow)
+{
+	PointLight *ptLight = (PointLight *)CreateObject(EPointLight);
+
+	if (ptLight)
+	{
+		ptLight->Location = Location;
+		ptLight->SourceRadius = SourceRadius;
+		ptLight->SoftSourceRadius = SoftSourceRadius;
+		ptLight->SourceLength = SourceLength;
+		ptLight->Intensity = Intensity;
+		ptLight->LightColor = LightColor;
+		ptLight->IsCastShadow = bCastShadow;
+
+		OnCreate(ptLight);
+	}
+
+	return ptLight? ptLight->GetID() : INVALID_OBJID;
+}
+
+ObjectID SuiteImpl::AddSpotLight(const kVector3D &Location, const kRotation &Rotationn, float AttenuationRadius, float SourceRadius, float SoftSourceRadius, float SourceLength, float InnerConeAngle, float OuterConeAngle, float Intensity, kColor LightColor, bool bCastShadow)
+{
+	SpotLight *spotLight = (SpotLight *)CreateObject(ESpotLight);
+	
+	if (spotLight)
+	{
+		spotLight->Location = Location;
+		spotLight->Rotation = Rotationn;
+		spotLight->AttenuationRadius = AttenuationRadius;
+		spotLight->SourceRadius = SourceRadius;
+		spotLight->SoftSourceRadius = SoftSourceRadius;
+		spotLight->SourceLength = SourceLength;
+		spotLight->Intensity = Intensity;
+		spotLight->LightColor = LightColor;
+		spotLight->IsCastShadow = bCastShadow;
+		spotLight->InnerConeAngle = InnerConeAngle;
+		spotLight->OuterConeAngle = OuterConeAngle;
+
+		OnCreate(spotLight);
+	}
+
+	return spotLight? spotLight->GetID() : INVALID_OBJID;
+}
+
+bool SuiteImpl::DeferredUpdate(BuildingObject *Obj, EChannelMask Mask)
+{
+	bool bFound = false;
+
+	if (Obj)
+	{
+		DeferredUpdateMap::iterator it = _DeferredUpdateMap.find(Obj->GetID());
+		bFound = (it != _DeferredUpdateMap.end());
+		if (bFound)
+		{
+			Obj->_bNeedUpdate = true;
+			FDeferredObjectInfo &ObjInfo = it->second;
+			ObjInfo.Mask |= Mask;
+		}
+		else
+		{
+			ObjectID ID = Obj->GetID();
+			_DeferredUpdateMap[ID] = FDeferredObjectInfo(ID, Mask);
+			Obj->_bNeedUpdate = true;
+		}
+	}
+	
+	return bFound;
 }
 
 

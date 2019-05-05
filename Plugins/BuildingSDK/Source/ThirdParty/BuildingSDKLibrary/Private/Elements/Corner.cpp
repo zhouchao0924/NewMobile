@@ -9,30 +9,40 @@
 const float const_minAngle = 30.0f;
 const float const_minDist = 40.0f;
 
+void Corner::FWallInfo::Serialize(ISerialize &Ar)
+{
+	Ar << Angle;
+	Ar << WallID;
+	KSERIALIZE_ENUM(EObjectType, WallType);
+}
+
 BEGIN_CLASS(Corner)
 	ADD_PROP(Location, Vec2DProperty)
 END_CLASS()
 
 Corner::Corner()
 	: Baton(nullptr)
-	, RelativeID(INVALID_OBJID)
 {
 }
 
-void Corner::Serialize(ISerialize &Ar)
+void Corner::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	BuildingObject::Serialize(Ar);
-	SERIALIZE_VEC(ConnectedWalls)
-	SERIALIZE_VEC(Angles);
+	BuildingObject::Serialize(Ar, Ver);
+
+	BeginChunk<Corner>(Ar);
+
+	SERIALIZE_COMPLEXVEC(ConnectedWalls);
+
+	EndChunk<Corner>(Ar);
 }
 
-void Corner::MarkNeedUpdate()
+void Corner::MarkNeedUpdate(EChannelMask Mask /*= EChannelAll*/)
 {
-	BuildingObject::MarkNeedUpdate();
+	BuildingObject::MarkNeedUpdate(Mask);
 
 	for (size_t i = 0; i < ConnectedWalls.size(); ++i)
 	{
-		BuildingObject *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i], Wall);
+		BuildingObject *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i].WallID, Wall);
 		if (pWall)
 		{
 			pWall->MarkNeedUpdate();
@@ -64,15 +74,13 @@ void Corner::AddWall(Wall *pWall)
 		float Degree = Direction.GetAngle();
 		size_t n = ConnectedWalls.size();
 
-		Angles.resize(n + 1);
 		ConnectedWalls.resize(n + 1);
 
 		size_t i = n;
 		for (; i > 0; --i)
 		{
-			if (Angles[i - 1] > Degree)
+			if (ConnectedWalls[i - 1].Angle > Degree)
 			{
-				Angles[i] = Angles[i - 1];
 				ConnectedWalls[i] = ConnectedWalls[i - 1];
 			}
 			else
@@ -80,8 +88,9 @@ void Corner::AddWall(Wall *pWall)
 				break;
 			}
 		}
-		Angles[i] = Degree;
-		ConnectedWalls[i] = pWall->GetID();
+		ConnectedWalls[i].Angle = Degree;
+		ConnectedWalls[i].WallID = pWall->GetID();
+		ConnectedWalls[i].WallType = pWall->GetType();
 
 		MarkNeedUpdate();
 	}
@@ -93,21 +102,21 @@ void Corner::SetLocation(const kPoint &Loc)
 	MarkNeedUpdate();
 }
 	
-void Corner::GetNearByWall(ObjectID WallID, ObjectID &LeftWall, ObjectID &RightWall)
+void Corner::GetNearByWall(ObjectID WallID, ObjectID &LeftWall, ObjectID &RightWall, bool bIgnoreVirtualWall)
 {
 	LeftWall = RightWall = INVALID_OBJID;
 
 	int l_index, r_index;
-	GetNearByWallIndex(WallID, l_index, r_index);
+	GetNearByWallIndex(WallID, l_index, r_index, bIgnoreVirtualWall);
 		
 	if (l_index >= 0)
 	{
-		LeftWall = ConnectedWalls[l_index];
+		LeftWall = ConnectedWalls[l_index].WallID;
 	}
 
 	if (r_index >= 0)
 	{
-		RightWall = ConnectedWalls[r_index];
+		RightWall = ConnectedWalls[r_index].WallID;
 	}
 }
 
@@ -118,7 +127,7 @@ int Corner::GetWallIndex(ObjectID WallID)
 
 	for (int i = 0; i < n; ++i)
 	{
-		if (ConnectedWalls[i] == WallID)
+		if (ConnectedWalls[i].WallID == WallID)
 		{
 			foundIndex = i;
 			break;
@@ -128,7 +137,7 @@ int Corner::GetWallIndex(ObjectID WallID)
 	return foundIndex;
 }
 
-void Corner::GetNearByWallIndex(ObjectID WallID, int &LeftWall, int &RightWall)
+void Corner::GetNearByWallIndex(ObjectID WallID, int &LeftWall, int &RightWall, bool bIgnoreVirtualWall)
 {
 	LeftWall = RightWall = -1;
 
@@ -137,24 +146,25 @@ void Corner::GetNearByWallIndex(ObjectID WallID, int &LeftWall, int &RightWall)
 	{
 		for (size_t i = 0; i < n; ++i)
 		{
-			if (ConnectedWalls[i] == WallID)
+			if (ConnectedWalls[i].WallID == WallID)
 			{
-				if (i > 0)
+				for (size_t k = 1; k < ConnectedWalls.size(); ++k)
 				{
-					RightWall = i - 1;
+					int index = (i - k + n) % n;
+					if (!bIgnoreVirtualWall || ConnectedWalls[index].WallType != EVirtualWall)
+					{
+						RightWall = index;
+						break;
+					}
 				}
-				else if (ConnectedWalls.size() > 2)
+				for (size_t k = 1; k < ConnectedWalls.size(); ++k)
 				{
-					RightWall = n - 1;
-				}
-
-				if (i < ConnectedWalls.size() - 1)
-				{
-					LeftWall = i + 1;
-				}
-				else if (ConnectedWalls.size() > 2)
-				{
-					LeftWall = 0;
+					int index = (i + k + n) % n;
+					if (!bIgnoreVirtualWall || ConnectedWalls[index].WallType != EVirtualWall)
+					{
+						LeftWall = index;
+						break;
+					}
 				}
 			}
 		}
@@ -165,7 +175,7 @@ bool Corner::IsConnect(ObjectID CornerID)
 {
 	for (size_t i = 0; i < ConnectedWalls.size(); ++i)
 	{
-		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i], Wall);
+		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i].WallID, Wall);
 		if (pWall)
 		{
 			if (CornerID == pWall->GetOtherCorner(_ID))
@@ -183,10 +193,9 @@ void Corner::RemoveWall(ObjectID WallID)
 	{
 		for (size_t i = 0; i < ConnectedWalls.size(); ++i)
 		{
-			if (ConnectedWalls[i] == WallID)
+			if (ConnectedWalls[i].WallID == WallID)
 			{
 				ConnectedWalls.erase(ConnectedWalls.begin() + i);
-				Angles.erase(Angles.begin() + i);
 				MarkNeedUpdate();
 				break;
 			}
@@ -196,7 +205,7 @@ void Corner::RemoveWall(ObjectID WallID)
 
 bool Corner::IsFree()
 {
-	return ConnectedWalls.size() == 0 && RelativeID==INVALID_OBJID;
+	return ConnectedWalls.size() == 0;
 }
 
 bool Corner::IsValid()
@@ -218,7 +227,7 @@ bool Corner::IsWallDistValid()
 		std::vector<kLine2D> ConnWallLines;
 		for (size_t i = 0; i < ConnectedWalls.size(); ++i)
 		{
-			Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i], Wall);
+			Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i].WallID, Wall);
 			if (pWall)
 			{
 				kPoint P0, P1;
@@ -311,27 +320,27 @@ bool Corner::Move(const kPoint &DeltaMove)
 	}
 		
 	//intersection check
-	if (!IsWallDistValid())
-	{
-		Location = SavedLoc;
-		return false;
-	}
+// 	if (!IsWallDistValid())
+// 	{
+// 		Location = SavedLoc;
+// 		return false;
+// 	}
 
 	//resort connnect wall
-	std::vector<ObjectID> newConnectWalls;
+	std::vector<FWallInfo> newConnectWalls;
 	newConnectWalls.resize(n);
 
 	for (int i = 0; i < n; i++)
 	{
-		Angles[i] = newAngles[(i + iMin) % n];
 		newConnectWalls[i] = ConnectedWalls[(i + iMin) % n];
+		newConnectWalls[i].Angle = newAngles[(i + iMin) % n];
 	}
 
 	ConnectedWalls.swap(newConnectWalls);
 
 	for (size_t i = 0; i < ConnectedWalls.size(); ++i)
 	{
-		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i], Wall);
+		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i].WallID, Wall);
 		if (pWall)
 		{
 			ObjectID IDCon = pWall->GetOtherCorner(_ID);
@@ -346,6 +355,31 @@ bool Corner::Move(const kPoint &DeltaMove)
 	MarkNeedUpdate();
 
 	return true;
+}
+
+IValue *Corner::GetFunctionProperty(const std::string &name)
+{
+	IValue *pValue = BuildingObject::GetFunctionProperty(name);
+
+	if (!pValue)
+	{
+		if (name == "Walls")
+		{
+			static std::vector<ObjectID> Walls;
+
+			size_t nWall = ConnectedWalls.size();
+			Walls.resize(nWall);
+
+			for (size_t i = 0; i < nWall; ++i)
+			{
+				Walls[i] = ConnectedWalls[i].WallID;
+			}
+
+			pValue = &GValueFactory->Create(kArray<int>(Walls));
+		}
+	}
+
+	return pValue;
 }
 
 void Corner::RecalcAngles(std::vector<float> &newAngles, std::vector<ObjectID> *connCorners)
@@ -363,7 +397,7 @@ void Corner::RecalcAngles(std::vector<float> &newAngles, std::vector<ObjectID> *
 	{
 		kPoint P0, P1;
 
-		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i], Wall);
+		Wall *pWall = SUITE_GET_BUILDING_OBJ(ConnectedWalls[i].WallID, Wall);
 		pWall->GetLocations(P0, P1);
 
 		if (pWall->P[0] == _ID)

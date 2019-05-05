@@ -9,8 +9,9 @@ class BuildingConfig :public BuildingObject
 public:
 	BuildingConfig();
 	EObjectType GetType() override { return EBuildingConfig; }
-	void Serialize(ISerialize &Ar);
 public:
+	ObjectID		SkyLight;
+	ObjectID		PostProcess;
 	std::string		WallMaterial;
 	int				WallMaterialType;
 	std::string		FloorMaterial;

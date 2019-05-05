@@ -4,6 +4,8 @@
 #include "assert.h"
 
 PValue PValue::Nil;
+static std::vector<int> defArray;
+static std::vector<kPoint> defVec2Array;
 
 PValue::PValue()
 	:ValueType(kV_Nil)
@@ -28,6 +30,7 @@ PValue::~PValue()
 	while (WeightData)
 	{
 		DEL_WEIGHTDATE(kV_IntArray, std::vector<int>);
+		DEL_WEIGHTDATE(kV_Vec2DArray, std::vector<kPoint>);
 		DEL_WEIGHTDATE(kV_RawString, std::string);
 		DEL_WEIGHTDATE(kV_StdString, std::string);
 		DEL_WEIGHTDATE(kV_Vec2D, kPoint);
@@ -49,6 +52,12 @@ PValue::PValue(float value) :PValue()
 {
 	Data.fValue = value;
 	ValueType = kV_Float;
+}
+
+PValue::PValue(kColor value) :PValue()
+{
+	Data.colValue = value.toDword();
+	ValueType = kV_Color;
 }
 
 PValue::PValue(const char *str) :PValue()
@@ -105,6 +114,26 @@ PValue::PValue(std::vector<int> *value) :PValue()
 	ValueType = kV_IntArray;
 }
 
+PValue::PValue(const kArray<int> &value):PValue()
+{
+	value.saveto(defArray);
+	Data.IntArray = &defArray;
+	ValueType = kV_IntArray;
+}
+
+PValue::PValue(std::vector<kPoint> *value):PValue()
+{
+	Data.Vec2Array = value;
+	ValueType = kV_Vec2DArray;
+}
+
+PValue::PValue(const kArray<kPoint> &value):PValue()
+{
+	value.saveto(defVec2Array);
+	Data.Vec2Array = &defVec2Array;
+	ValueType = kV_Vec2DArray;
+}
+
 PValue::PValue(kPlane3D *value) :PValue()
 {
 	Data.plane = value;
@@ -138,6 +167,15 @@ bool PValue::BoolValue() const
 	return false;
 }
 
+kColor PValue::ColorValue() const
+{
+	if (ValueType == kV_Color)
+	{
+		return Data.colValue;
+	}
+	return kColor();
+}
+
 #define  RET_PVALUE(valuetype, type, mem, defvalue){	\
 	if (ValueType == valuetype){						\
 		if (WeightData) {								\
@@ -150,12 +188,21 @@ bool PValue::BoolValue() const
 	return defvalue;									\
 }
 
-static std::vector<int> defArray;
-static std::vector<kPoint> defVec2Array;
+#define  RET_PVALUE_ARRAY(valuetype, type, mem, defvalue){				\
+	if (ValueType == valuetype){										\
+		if (WeightData) {												\
+			return kArray<type>(*((std::vector<type>*)WeightData));		\
+		}																\
+		else {															\
+			return kArray<type>(*Data.mem);								\
+		}																\
+	}																	\
+	return kArray<type>(defvalue);										\
+}
 
-std::vector<int> & PValue::IntArrayValue() const { RET_PVALUE(kV_IntArray, std::vector<int>, IntArray, defArray) }
+kArray<int>  PValue::IntArrayValue() const { RET_PVALUE_ARRAY(kV_IntArray, int, IntArray, defArray) }
 
-std::vector<kPoint> &PValue::Vec2ArrayValue() const { RET_PVALUE(kV_Vec2DArray, std::vector<kPoint>, Vec2Array, defVec2Array) }
+kArray<kPoint> PValue::Vec2ArrayValue() const { RET_PVALUE_ARRAY(kV_Vec2DArray, kPoint, Vec2Array, defVec2Array) }
 
 kPoint PValue::Vec2Value() const { RET_PVALUE(kV_Vec2D, kPoint, vec2Value, kPoint()) }
 

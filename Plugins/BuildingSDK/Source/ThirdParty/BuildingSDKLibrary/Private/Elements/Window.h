@@ -10,6 +10,5 @@ class Window :public WallHole
 public:
 	Window();
 	EObjectType GetType() { return EWindow; }
-	void UpdateTransform(ModelInstance *pModel) override;
 };
 

@@ -25,9 +25,11 @@ void UnpackID(ModelSectionID ModelID, ObjectID &PrimID, int &SubModelIndex)
 	SubModelIndex = ModelID & 0x00000000ffffffff;
 }
 
-void Surface::Serialize(ISerialize &Ar)
+void Surface::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	BuildingObject::Serialize(Ar);
+	BuildingObject::Serialize(Ar, Ver);
+
+	BeginChunk<Surface>(Ar);
 
 	if (Ar.IsSaving())
 	{
@@ -50,6 +52,10 @@ void Surface::Serialize(ISerialize &Ar)
 			RefModels.insert(Id);
 		}
 	}
+
+	Surf.Serialize(Ar, 0);
+
+	EndChunk<Surface>(Ar);
 }
 
 void Surface::Link(ObjectID PrimID, int ModelIndex)

@@ -17,7 +17,7 @@ FileReader::~FileReader()
 
 void FileReader::Serialize(void *pData, size_t szData)
 {
-	if (_reader.is_open())
+	if (szData >0 && _reader.is_open())
 	{
 		_reader.read((char *)pData, szData);
 	}
@@ -66,7 +66,7 @@ FileWriter::~FileWriter()
 
 void FileWriter::Serialize(void *pData, size_t szData)
 {
-	if (_writer.is_open())
+	if (szData > 0 && _writer.is_open())
 	{
 		_writer.write((char *)pData, szData);
 	}

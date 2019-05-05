@@ -15,7 +15,7 @@ PinCorner::PinCorner()
 {
 }
 
-void PinCorner::MarkNeedUpdate()
+void PinCorner::Update()
 {
 	BuildingObject *pOwner = SUITE_GET_BUILDING_OBJ(OwnerID, BuildingObject);
 	
@@ -24,8 +24,16 @@ void PinCorner::MarkNeedUpdate()
 		pOwner->MarkNeedUpdate();
 	}
 
-	Corner::MarkNeedUpdate();
+	Corner::Update();
 }
+
+bool PinCorner::IsFree()
+{
+	return Corner::IsFree() && OwnerID == INVALID_OBJID;
+}
+
+
+
 
 
 

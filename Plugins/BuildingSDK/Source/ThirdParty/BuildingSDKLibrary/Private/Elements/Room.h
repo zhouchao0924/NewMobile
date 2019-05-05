@@ -43,7 +43,7 @@ class Room :public  BuildingObject
 public:
 	Room();
 	kPoint GetRight(int index);
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	void Init(ObjectID *pCorners, int Count);
 	int  GetPolygon(kPoint *&pPolygon, bool bInnerPolygon);
 	void GetCorners(std::vector<Corner *> &Corners);
@@ -54,8 +54,9 @@ public:
 	void OnDestroy();
 	EObjectType GetType() { return ERoom; }
 	bool HitTest(const kPoint &Location, ObjectID &HitObj);
-	void MarkNeedUpdate();
+	void Update() override;
 	bool HasEmptyWall();
+	IValue *GetFunctionProperty(const std::string &name) override;
 	bool GetSegments(std::vector<int> &Polygons, std::vector<FSegmentPoint> &Points, bool bFloor);
 protected:
 	void BuildCache();

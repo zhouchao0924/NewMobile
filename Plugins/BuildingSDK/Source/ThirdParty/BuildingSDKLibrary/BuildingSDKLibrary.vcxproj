@@ -110,11 +110,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;./Public;./Public/Math;./Private;./Private/External;./Thridparty/FBX/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./Public;./Public/Math;./Private;./Private/External;./Thridparty/draco/build;./Thridparty/draco/src;./Thridparty/FBX/include;./Thridparty/GLTF/include;./Thridparty/rapidjson/include;./Thridparty/etclib/EtcCodeC;./Thridparty/etclib/etc;./Thridparty/etclib/etccodec</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WINDOWS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>./Thridparty/draco/build/Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dracoenc.lib;dracodec.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(TargetPath)" "$(SolutionDir)..\..\..\Binaries\ThirdParty\BuildingSDKLibrary\Win64\"</Command>
@@ -141,7 +143,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./;./Public;./Public/Math;./Private;./Private/External;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\New\SDK\Thridparty\etclib;./Public;./Public/Math;./Private;./Private/External;./Thridparty/FBX/include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;EXAMPLELIBRARY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -162,19 +164,26 @@
     <ClInclude Include="Private\Class\Property.h" />
     <ClInclude Include="Private\Class\PValue.h" />
     <ClInclude Include="Private\Class\ValueFactory.h" />
+    <ClInclude Include="Private\DataExchange\FBXImportImpl.h" />
+    <ClInclude Include="Private\DataExchange\GLTFExporterImpl.h" />
     <ClInclude Include="Private\Elements\Anchor.h" />
     <ClInclude Include="Private\Elements\BuildingConfig.h" />
     <ClInclude Include="Private\Elements\BuildingObject.h" />
     <ClInclude Include="Private\Elements\CompoudObject.h" />
     <ClInclude Include="Private\Elements\Corner.h" />
     <ClInclude Include="Private\Elements\DoorHole.h" />
+    <ClInclude Include="Private\Elements\Light.h" />
     <ClInclude Include="Private\Elements\ModelInstance.h" />
     <ClInclude Include="Private\Elements\PinCorner.h" />
     <ClInclude Include="Private\Elements\PlanePrimitive.h" />
+    <ClInclude Include="Private\Elements\PointLight.h" />
+    <ClInclude Include="Private\Elements\PostProcess.h" />
     <ClInclude Include="Private\Elements\Primitive.h" />
     <ClInclude Include="Private\Elements\Room.h" />
     <ClInclude Include="Private\Elements\Skirting.h" />
+    <ClInclude Include="Private\Elements\SkyLight.h" />
     <ClInclude Include="Private\Elements\SparseMap.h" />
+    <ClInclude Include="Private\Elements\SpotLight.h" />
     <ClInclude Include="Private\Elements\SuiteImpl.h" />
     <ClInclude Include="Private\Elements\Surface.h" />
     <ClInclude Include="Private\Elements\Wall.h" />
@@ -189,7 +198,7 @@
     <ClInclude Include="Private\External\poly2tri\sweep\cdt.h" />
     <ClInclude Include="Private\External\poly2tri\sweep\sweep.h" />
     <ClInclude Include="Private\External\poly2tri\sweep\sweep_context.h" />
-    <ClInclude Include="Private\Importer\ImporterImpl.h" />
+    <ClInclude Include="Private\FBXFile\FBXFile.h" />
     <ClInclude Include="Private\Mesh\MeshObject.h" />
     <ClInclude Include="Private\Mesh\SurfaceObject.h" />
     <ClInclude Include="Private\MXFile\MXFile.h" />
@@ -198,12 +207,16 @@
     <ClInclude Include="Private\Stream\FileStream.h" />
     <ClInclude Include="Private\Stream\MemStream.h" />
     <ClInclude Include="Private\Stream\StreamImpl.h" />
+    <ClInclude Include="Private\TargetPlatform\AndroidPlatform.h" />
+    <ClInclude Include="Private\TargetPlatform\PCPlatform.h" />
+    <ClInclude Include="Private\TargetPlatform\WebGLPlatform.h" />
     <ClInclude Include="Private\Transaction\DRTransactionSystem.h" />
     <ClInclude Include="Private\Transaction\Transaction.h" />
+    <ClInclude Include="Private\Uitls\MathUtils.h" />
     <ClInclude Include="Public\IBuildingSDK.h" />
     <ClInclude Include="Public\IClass.h" />
     <ClInclude Include="Public\IMeshObject.h" />
-    <ClInclude Include="Public\IImporter.h" />
+    <ClInclude Include="Public\ITargetPlatform.h" />
     <ClInclude Include="Public\IProperty.h" />
     <ClInclude Include="Public\ISerialize.h" />
     <ClInclude Include="Public\ISuite.h" />
@@ -217,11 +230,91 @@
     <ClInclude Include="Public\Math\kPlane.h" />
     <ClInclude Include="Public\Math\kQuat.h" />
     <ClInclude Include="Public\Math\kSphere.h" />
+    <ClInclude Include="Public\Math\kString.h" />
     <ClInclude Include="Public\Math\kTriangle.h" />
     <ClInclude Include="Public\Math\kVector2D.h" />
     <ClInclude Include="Public\Math\kVector3D.h" />
     <ClInclude Include="Public\Math\kVector4D.h" />
     <ClInclude Include="Public\Math\MathBase.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4EncodingBits.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_ETC1.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_R11.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RG11.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8A1.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGBA8.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcDifferentialTrys.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcErrorMetric.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcIndividualTrys.h" />
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcSortedBlockList.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\Etc.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcColor.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcColorFloatRGBA.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcConfig.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcFilter.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcImage.h" />
+    <ClInclude Include="Thridparty\etclib\Etc\EtcMath.h" />
+    <ClInclude Include="Thridparty\GLTF\include\Base64.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAccessor.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAnimation.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAsset.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFBuffer.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFBufferView.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFCamera.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFConstants.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFDracoExtension.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFExtension.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFImage.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFMaterial.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFMesh.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFNode.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFObject.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFOptions.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFPrimitive.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFProgram.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFSampler.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFScene.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFShader.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFSkin.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFTechnique.h" />
+    <ClInclude Include="Thridparty\GLTF\include\GLTFTexture.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\allocators.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\document.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\encodedstream.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\encodings.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\error\en.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\error\error.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\filereadstream.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\filewritestream.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\fwd.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\biginteger.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\diyfp.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\dtoa.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\ieee754.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\itoa.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\meta.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\pow10.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\regex.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\stack.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\strfunc.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\strtod.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\swap.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\istreamwrapper.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\memorybuffer.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\memorystream.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\msinttypes\inttypes.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\msinttypes\stdint.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\ostreamwrapper.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\pointer.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\prettywriter.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\rapidjson.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\reader.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\schema.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\stream.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\stringbuffer.h" />
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\writer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BuildingSDKLibrary.cpp" />
@@ -232,19 +325,26 @@
     <ClCompile Include="Private\Class\Property.cpp" />
     <ClCompile Include="Private\Class\PValue.cpp" />
     <ClCompile Include="Private\Class\ValueFactory.cpp" />
+    <ClCompile Include="Private\DataExchange\FBXImportImpl.cpp" />
+    <ClCompile Include="Private\DataExchange\GLTFExporterImpl.cpp" />
     <ClCompile Include="Private\Elements\Anchor.cpp" />
     <ClCompile Include="Private\Elements\BuildingConfig.cpp" />
     <ClCompile Include="Private\Elements\BuildingObject.cpp" />
     <ClCompile Include="Private\Elements\CompoudObject.cpp" />
     <ClCompile Include="Private\Elements\Corner.cpp" />
     <ClCompile Include="Private\Elements\DoorHole.cpp" />
+    <ClCompile Include="Private\Elements\Light.cpp" />
     <ClCompile Include="Private\Elements\ModelInstance.cpp" />
     <ClCompile Include="Private\Elements\PinCorner.cpp" />
     <ClCompile Include="Private\Elements\PlanePrimitive.cpp" />
+    <ClCompile Include="Private\Elements\PointLight.cpp" />
+    <ClCompile Include="Private\Elements\PostProcess.cpp" />
     <ClCompile Include="Private\Elements\Primitive.cpp" />
     <ClCompile Include="Private\Elements\Room.cpp" />
     <ClCompile Include="Private\Elements\Skirting.cpp" />
+    <ClCompile Include="Private\Elements\SkyLight.cpp" />
     <ClCompile Include="Private\Elements\SparseMap.cpp" />
+    <ClCompile Include="Private\Elements\SpotLight.cpp" />
     <ClCompile Include="Private\Elements\SuiteImpl.cpp" />
     <ClCompile Include="Private\Elements\Surface.cpp" />
     <ClCompile Include="Private\Elements\Wall.cpp" />
@@ -259,7 +359,7 @@
     <ClCompile Include="Private\External\poly2tri\sweep\cdt.cc" />
     <ClCompile Include="Private\External\poly2tri\sweep\sweep.cc" />
     <ClCompile Include="Private\External\poly2tri\sweep\sweep_context.cc" />
-    <ClCompile Include="Private\Importer\ImporterImpl.cpp" />
+    <ClCompile Include="Private\FBXFile\FBXFile.cpp" />
     <ClCompile Include="Private\Mesh\MeshObject.cpp" />
     <ClCompile Include="Private\Mesh\SurfaceObject.cpp" />
     <ClCompile Include="Private\MXFile\MXFile.cpp" />
@@ -267,8 +367,48 @@
     <ClCompile Include="Private\Stream\FileStream.cpp" />
     <ClCompile Include="Private\Stream\MemStream.cpp" />
     <ClCompile Include="Private\Stream\StreamImpl.cpp" />
+    <ClCompile Include="Private\TargetPlatform\AndroidPlatform.cpp" />
+    <ClCompile Include="Private\TargetPlatform\PCPlatform.cpp" />
+    <ClCompile Include="Private\TargetPlatform\WebGLPlatform.cpp" />
     <ClCompile Include="Private\Transaction\DRTransactionSystem.cpp" />
     <ClCompile Include="Private\Transaction\Transaction.cpp" />
+    <ClCompile Include="Private\Uitls\MathUtils.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_ETC1.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_R11.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RG11.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8A1.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGBA8.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcDifferentialTrys.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcIndividualTrys.cpp" />
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcSortedBlockList.cpp" />
+    <ClCompile Include="Thridparty\etclib\Etc\Etc.cpp" />
+    <ClCompile Include="Thridparty\etclib\Etc\EtcFilter.cpp" />
+    <ClCompile Include="Thridparty\etclib\Etc\EtcImage.cpp" />
+    <ClCompile Include="Thridparty\etclib\Etc\EtcMath.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\Base64.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAccessor.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAnimation.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAsset.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFBuffer.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFBufferView.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFCamera.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFDracoExtension.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFImage.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFMaterial.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFMesh.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFNode.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFObject.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFPrimitive.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFProgram.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFSampler.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFScene.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFShader.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFSkin.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFTechnique.cpp" />
+    <ClCompile Include="Thridparty\GLTF\src\GLTFTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Private\External\png\README.md" />

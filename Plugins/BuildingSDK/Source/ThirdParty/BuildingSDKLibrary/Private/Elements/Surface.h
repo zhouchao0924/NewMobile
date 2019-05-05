@@ -10,7 +10,7 @@ class Surface :public BuildingObject
 	DEFIN_CLASS()
 public:
 	Surface();
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	ISurfaceObject *GetObject() { return &Surf; }
 	EObjectType GetType() { return ESurface; }
 	void Link(ObjectID PrimID, int ModelIndex);

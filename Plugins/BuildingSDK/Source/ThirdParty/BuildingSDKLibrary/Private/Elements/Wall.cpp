@@ -8,13 +8,12 @@
 #include "DoorHole.h"
 #include "ISuite.h"
 #include "Room.h"
+#include <algorithm>
 #include "Class/Property.h"
 
 void FWallHoleInfo::Serialize(ISerialize &Ar)
 {
 	Ar << HoleID;
-	Ar << MinX;
-	Ar << MaxX;
 	KSERIALIZE_ENUM(EObjectType, ObjType);
 }
 
@@ -33,11 +32,16 @@ BEGIN_DERIVED_CLASS(Wall, Primitive)
 	ADD_PROP(RoomRight, IntProperty)
 END_CLASS()
 
-void Wall::Serialize(ISerialize &Ar)
+void Wall::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	Primitive::Serialize(Ar);
+	Primitive::Serialize(Ar, Ver);
+
+	BeginChunk<Wall>(Ar);
+
 	Ar << P[0];
 	Ar << P[1];	
+
+	EndChunk<Wall>(Ar);
 }
 
 void Wall::OnCreate()
@@ -65,6 +69,33 @@ IValue *Wall::GetFunctionProperty(const std::string &name)
 	{
 		pValue = &GValueFactory->Create(P[1]);
 	}
+	else if (name == "Range")
+	{
+		kPoint P0, P1;
+		GetLocations(P0, P1);
+		
+		static kPoint Range;
+		float MinX, MaxX;
+		std::vector<FWallHoleInfo> *pHoles = GetHoles();
+		if (pHoles && pHoles->size()>0)
+		{
+			const FWallHoleInfo &Hole0 = pHoles->at(0);
+			GetRange(Hole0.HoleID, MinX, MaxX);
+			Range.x = MinX;
+
+			const FWallHoleInfo &Hole1 = pHoles->back();
+			GetRange(Hole1.HoleID, MinX, MaxX);
+			Range.y = MaxX;
+		}
+		else
+		{
+			Range.x = 0;
+			Range.y = (P1 - P0).Size();
+		}
+
+		pValue = &GValueFactory->Create(&Range);
+	}
+
 	return pValue;
 }
 
@@ -134,7 +165,7 @@ kPoint Wall::GetRight()
 
 void Wall::GetBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine)
 {
-	if (!bCapsBuilded || bNeedUpdate)
+	if (!bCapsBuilded || IsNeedUpdate())
 	{
 		BuildCaps();
 		bCapsBuilded = true;
@@ -305,11 +336,120 @@ struct SegmentDistToSegment_Solver
 	}
 };
 
+struct FRay
+{
+	FRay(const kVector3D &InStart, const kVector3D &InDir)
+		: Start(InStart)
+		, Dir(InDir)
+	{
+	}
+	kVector3D Start;
+	kVector3D Dir;
+};
+
+void ClipWallLine(bool *bClip, const FRay &Ray, const kVector3D &Wall_Point, const kPoint &Wall_DL, const kPoint &End, kPoint &Out)
+{
+	const float TestLen = 10000.0f;
+
+	if (std::abs(Ray.Dir.Dot(Wall_DL)) < 0.99f)
+	{
+		kLine L0(Ray.Start - Ray.Dir * TestLen, Ray.Start + Ray.Dir * TestLen);
+		kLine L1(Wall_Point - Wall_DL * TestLen, Wall_Point + Wall_DL * TestLen);
+
+		kVector3D OutP1, OutP2;
+		SegmentDistToSegment_Solver(L0.start, L0.end, L1.start, L1.end).Solve(OutP1, OutP2);
+
+		kPoint pt = kPoint(OutP2.x, OutP2.y);
+		if (!bClip || !(*bClip))
+		{
+			if (bClip)
+			{
+				*bClip = true;
+			}
+			Out = pt;
+		}
+		else
+		{
+			if ((pt - End).Size() < (Out - End).Size())
+			{
+				Out = pt;
+			}
+		}
+	}
+}
+
+void Wall::BuildCaps()
+{
+#if 0
+	Corner *pCorner0 = SUITE_GET_BUILDING_OBJ(P[0], Corner);
+	Corner *pCorner1 = SUITE_GET_BUILDING_OBJ(P[1], Corner); 
+	
+	kPoint Forward;
+	kLine  l_left, l_center, l_right;
+	GetOriginalBorderLines(l_center, l_left, l_right);
+
+	Points[ELeft0] = kPoint(l_left.start.x, l_left.start.y);
+	Points[ELeft1] = kPoint(l_left.end.x, l_left.end.y);
+
+	Points[ERight0] = kPoint(l_right.start.x, l_right.start.y);
+	Points[ERight1] = kPoint(l_right.end.x, l_right.end.y);
+
+	Forward = kPoint(l_center.end.x - l_center.start.x, l_center.end.y - l_center.start.y);
+	Forward.Normalize();
+
+	kVector3D Right3 = kVector3D(0, 0, 1.0f).CrossProduct(Forward);
+	kPoint Right = kPoint(Right3.x, Right3.y).Normalize();
+
+	ObjectID connect_wall_0[2];
+	bool leftClip0 = false;
+	bool rightClip0 = false;
+	pCorner0->GetNearByWall(_ID, connect_wall_0[0], connect_wall_0[1], true);
+	Wall *pWall = nullptr;
+	for (int i = 0; i < 2; ++i)
+	{
+		ObjectID wall_id = connect_wall_0[i];
+		pWall = SUITE_GET_BUILDING_OBJ(wall_id, Wall);
+		if (pWall)
+		{
+			assert(!pWall->IsA((EVirtualWall)));
+			kVector3D Oth_D = kVector3D(pWall->GetDirection(P[0]));
+			kVector3D Half_D = ((Oth_D + Forward) * 0.5f).Normalize();
+			kPoint End = kPoint(l_center.end.x, l_center.end.y);
+
+			ClipWallLine(&leftClip0, FRay(l_center.start, Half_D), l_center.start - Right * GetThickLeft(), -Forward, End, Points[ELeft0]);
+			ClipWallLine(&rightClip0, FRay(l_center.start, Half_D), l_center.start + Right * GetThickRight(), -Forward, End, Points[ERight0]);
+		}
+	}
+
+	ObjectID connect_wall_1[2];
+	bool leftClip1 = false;
+	bool rightClip1 = false;
+	pCorner1->GetNearByWall(_ID, connect_wall_1[0], connect_wall_1[1], true);
+	for (int i = 0; i < 2; ++i)
+	{
+		ObjectID wall_id = connect_wall_1[i];
+		pWall = SUITE_GET_BUILDING_OBJ(wall_id, Wall);
+		if (pWall)
+		{
+			assert(!pWall->IsA((EVirtualWall)));
+			kVector3D Oth_D = kVector3D(pWall->GetDirection(P[1]));
+			kVector3D Half_D = ((Oth_D - Forward) * 0.5f).Normalize();
+			kPoint End = kPoint(l_center.start.x, l_center.start.y);
+
+			ClipWallLine(&leftClip1, FRay(l_center.end, Half_D), l_center.end - Right * GetThickLeft(), Forward, End, Points[ELeft1]);
+			ClipWallLine(&rightClip1, FRay(l_center.end, Half_D), l_center.end + Right * GetThickRight(), Forward, End, Points[ERight1]);
+		}
+	}
+#else
+	BuildCaps2();
+#endif
+}
+
 void ClipBorderLine(kVector3D &P0, kVector3D &DL0, kVector3D &P1, kVector3D &DL1, bool &bClip, kPoint &PtClip, kPoint &End)
 {
 	const float TestLen = 10000.0f;
 
-	if (std::abs(DL0.Dot(DL1))<0.98f)
+	if (std::abs(DL0.Dot(DL1)) < 0.98f)
 	{
 		kLine L0(P0 - DL0 * TestLen, P0 + DL0 * TestLen);
 		kLine L1(P1 - DL1 * TestLen, P1 + DL1 * TestLen);
@@ -333,11 +473,11 @@ void ClipBorderLine(kVector3D &P0, kVector3D &DL0, kVector3D &P1, kVector3D &DL1
 	}
 }
 
-void Wall::BuildCaps()
+void Wall::BuildCaps2()
 {
 	Corner *pCorner0 = SUITE_GET_BUILDING_OBJ(P[0], Corner);
-	Corner *pCorner1 = SUITE_GET_BUILDING_OBJ(P[1], Corner); 
-		
+	Corner *pCorner1 = SUITE_GET_BUILDING_OBJ(P[1], Corner);
+
 	if (pCorner0 && pCorner1)
 	{
 		Wall *pWall = NULL;
@@ -352,17 +492,17 @@ void Wall::BuildCaps()
 		Points[ERight0] = kPoint(l_right.start.x, l_right.start.y);
 		Points[ERight1] = kPoint(l_right.end.x, l_right.end.y);
 
-		Dir = kPoint(l_center.end.x - l_center.start.x, l_center.end.y - l_center.start.y) ;
+		Dir = kPoint(l_center.end.x - l_center.start.x, l_center.end.y - l_center.start.y);
 		Dir.Normalize();
 
 		ObjectID connect_wall_0[2];
 		bool leftClip0 = false;
 		bool rightClip0 = false;
-		pCorner0->GetNearByWall(_ID, connect_wall_0[0], connect_wall_0[1]);
+		pCorner0->GetNearByWall(_ID, connect_wall_0[0], connect_wall_0[1], true);
 
 		kVector3D UpDir(0, 0, 1.0f);
 
-		for (int i = 0; i < 2; ++i)
+		for (int i = 0; i < 2; i++)
 		{
 			ObjectID wall_id = connect_wall_0[i];
 			if (wall_id != INVALID_OBJID)
@@ -398,8 +538,8 @@ void Wall::BuildCaps()
 		ObjectID connect_wall_1[2];
 		bool leftClip1 = false;
 		bool rightClip1 = false;
-		pCorner1->GetNearByWall(_ID, connect_wall_1[0], connect_wall_1[1]);
-		for (int i = 0; i < 2; ++i)
+		pCorner1->GetNearByWall(_ID, connect_wall_1[0], connect_wall_1[1], true);
+		for (int i = 0; i < 2; i++)
 		{
 			ObjectID wall_id = connect_wall_1[i];
 
@@ -471,10 +611,12 @@ void Wall::SetCorner(int CornerIndex, ObjectID NewCorner, std::vector<FWallHoleI
 			std::vector<FWallHoleInfo> *Holes = GetHoles();
 			if (Holes)
 			{
+				float MinX, MaxX;
 				for (; i < Holes->size(); ++i)
 				{
 					FWallHoleInfo &Info = (*Holes)[i];
-					if (Info.MinX > Dist)
+					GetRange(Info.HoleID, MinX, MaxX);
+					if (MinX > Dist)
 					{
 						break;
 					}
@@ -485,12 +627,12 @@ void Wall::SetCorner(int CornerIndex, ObjectID NewCorner, std::vector<FWallHoleI
 					size_t nRemove = Holes->size() - i;
 					OtherHoles.resize(nRemove);
 
-					for (; i < Holes->size(); ++i)
-					{
-						OtherHoles[i] = (*Holes)[i];
-						OtherHoles[i].MinX -= Dist;
-						OtherHoles[i].MaxX -= Dist;
-					}
+// 					for (; i < Holes->size(); ++i)
+// 					{
+// 						OtherHoles[i] = (*Holes)[i];
+// 						OtherHoles[i].MinX -= Dist;
+// 						OtherHoles[i].MaxX -= Dist;
+// 					}
 
 					if (nRemove > 0)
 					{
@@ -512,12 +654,12 @@ void Wall::SetCorner(int CornerIndex, ObjectID NewCorner, std::vector<FWallHoleI
 						Holes->erase(Holes->begin(), Holes->begin() + nRemove);
 					}
 
-					for (size_t k = nRemove; k < Holes->size(); ++k)
-					{
-						FWallHoleInfo &Info = (*Holes)[k];
-						Info.MinX = Info.MinX - Dist;
-						Info.MaxX = Info.MaxX - Dist;
-					}
+// 					for (size_t k = nRemove; k < Holes->size(); ++k)
+// 					{
+// 						FWallHoleInfo &Info = (*Holes)[k];
+// 						Info.MinX = Info.MinX - Dist;
+// 						Info.MaxX = Info.MaxX - Dist;
+// 					}
 				}
 			}
 		}
@@ -526,7 +668,7 @@ void Wall::SetCorner(int CornerIndex, ObjectID NewCorner, std::vector<FWallHoleI
 	}
 }
 
-void Wall::MarkNeedUpdate()
+void Wall::Update()
 {
 	if (RoomLeft!=INVALID_OBJID)
 	{
@@ -547,7 +689,8 @@ void Wall::MarkNeedUpdate()
 	}
 
 	bCapsBuilded = false;
-	Primitive::MarkNeedUpdate();
+
+	Primitive::Update();
 }
 
 bool Wall::HitTest(const kPoint &Location, ObjectID &ObjID)
@@ -593,10 +736,12 @@ ObjectID Wall::HitTestHole(float Dist)
 	std::vector<FWallHoleInfo> *Holes = GetHoles();
 	if (Holes)
 	{
+		float MinX, MaxX;
 		for (int i = 0; i < Holes->size(); ++i)
 		{
 			FWallHoleInfo &HoleInfo = (*Holes)[i];
-			if (Dist > HoleInfo.MinX && Dist < HoleInfo.MaxX)
+			GetRange(HoleInfo.HoleID, MinX, MaxX);
+			if (Dist > MinX && Dist < MaxX)
 			{
 				HitObj = HoleInfo.HoleID;
 				break;
@@ -651,6 +796,16 @@ void Wall::GetCorners(std::vector<Corner *> &Corners)
 	}
 }
 
+bool Wall::GetRange(ObjectID HoleID, float &OutMinX, float &OutMaxX)
+{
+	WallHole *pHole = SUITE_GET_BUILDING_OBJ(HoleID, WallHole);	
+	if (pHole)
+	{
+		return pHole->GetRange(OutMinX, OutMaxX);
+	}
+	return false;
+}
+
 //////////////////////////////////////////////////////////////////////////
 BEGIN_DERIVED_CLASS(VirtualWall, Wall)
 END_CLASS()
@@ -666,19 +821,23 @@ SolidWall::SolidWall()
 
 BEGIN_DERIVED_CLASS(SolidWall, Wall)
 	ADD_PROP(bMainWall, BoolProperty)
-	ADD_PROP(ThickLeft, FloatProperty)
-	ADD_PROP(ThickRight, FloatProperty)
-	ADD_PROP(ZPos, FloatProperty)
+	ADD_PROP_CHANNEL(ThickLeft, FloatProperty, EChannelGeometry)
+	ADD_PROP_CHANNEL(ThickRight, FloatProperty, EChannelGeometry)
+	ADD_PROP_CHANNEL(ZPos, FloatProperty, EChannelGeometry)
 END_CLASS()
 
-void SolidWall::Serialize(ISerialize &Ar)
+void SolidWall::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	Wall::Serialize(Ar);
+	Wall::Serialize(Ar, Ver);
 	
+	BeginChunk<SolidWall>(Ar);
+
 	Ar << Height[0];
 	Ar << Height[1];
 
 	SERIALIZE_COMPLEXVEC(Holes);
+
+	EndChunk<SolidWall>(Ar);
 }
 
 void SolidWall::SetWallInfo(float InThickLeft, float InThickRight, float Height0, float Height1)
@@ -698,14 +857,16 @@ IValue *SolidWall::GetFunctionProperty(const std::string &name)
 		if (name == "Holes")
 		{
 			IValue &HolesInfo = GValueFactory->Create();
-
+			float MinX, MaxX;
 			for (size_t i = 0; i < Holes.size(); ++i)
 			{
 				FWallHoleInfo &HoleInfo = Holes[i];
+				GetRange(HoleInfo.HoleID, MinX, MaxX);
+				
 				IValue &pHole = GValueFactory->Create();
 				pHole.AddField("HoleID", GValueFactory->Create(HoleInfo.HoleID));
-				pHole.AddField("MinX", GValueFactory->Create(HoleInfo.MinX));
-				pHole.AddField("MaxX", GValueFactory->Create(HoleInfo.MaxX));
+				pHole.AddField("MinX", GValueFactory->Create(MinX));
+				pHole.AddField("MaxX", GValueFactory->Create(MaxX));
 				pHole.AddField("ObjType", GValueFactory->Create(HoleInfo.ObjType));
 				HolesInfo.AddField(pHole);
 			}
@@ -735,18 +896,23 @@ void SolidWall::UpdateWallHoles()
 	if (_Suite)
 	{
 		kPoint P0, P1;
+		float MinX, MaxX;
+
 		GetLocations(P0, P1);
 		kPoint DL = (P1 - P0).Normalize();
+
 		for (int i = 0; i < Holes.size(); ++i)
 		{
 			FWallHoleInfo &HoleInfo = Holes[i];
+			GetRange(HoleInfo.HoleID, MinX, MaxX);
+
 			WallHole *pHole = SUITE_GET_BUILDING_OBJ(HoleInfo.HoleID, WallHole);
 			if (pHole)
 			{
-				Corner *pCorner = SUITE_GET_BUILDING_OBJ(pHole->CornerID, Corner);
+				Corner *pCorner = SUITE_GET_BUILDING_OBJ(pHole->GetCorner(0), Corner);
 				if (pCorner)
 				{
-					pCorner->Location = P0 + DL * (HoleInfo.MinX + pHole->Width / 2.0f);
+					pCorner->Location = P0 + DL * (MinX + pHole->Width / 2.0f);
 					pCorner->MarkNeedUpdate();
 				}
 			}
@@ -1024,7 +1190,7 @@ void SolidWall::AddHole(WallHole *pHole, const kPoint &Location, float InZPos, f
 		pHole->ZPos = InZPos;
 		pHole->Width = InWidth;
 		pHole->Height = InHeight;
-		pHole->WallID = GetID();
+		pHole->OwnerID = GetID();
 
 		Corner *pCorner0 = SUITE_GET_BUILDING_OBJ(P[0], Corner);
 		if (pCorner0)
@@ -1039,7 +1205,9 @@ void SolidWall::AddHole(WallHole *pHole, const kPoint &Location, float InZPos, f
 			int i = n;
 			for (; i > 0; --i)
 			{
-				if (Holes[i - 1].MinX < MinX)
+				float OthMinX, OthMaxX;
+				GetRange(Holes[i - 1].HoleID, OthMinX, OthMaxX);
+				if (OthMinX < MinX)
 				{
 					break;
 				}
@@ -1049,10 +1217,56 @@ void SolidWall::AddHole(WallHole *pHole, const kPoint &Location, float InZPos, f
 			FWallHoleInfo &Info = Holes[i];
 			Info.HoleID = pHole->GetID();
 			Info.ObjType = pHole->GetType();
-			Info.MinX = MinX;
-			Info.MaxX = MaxX;
 		}
 	}
+}
+
+void SolidWall::UpdateHole(WallHole *pHole)
+{
+	size_t i = 0;
+	for (; i < Holes.size(); ++i)
+	{
+		FWallHoleInfo &Info = Holes[i];
+		if (Info.HoleID == pHole->GetID())
+		{
+			break;
+		}
+	}
+
+	float MinX, MaxX;
+	FWallHoleInfo &Info = Holes[i];
+	GetRange(Info.HoleID, MinX, MaxX);
+
+	float OthMinX, OthMaxX;
+
+	if (i > 0)
+	{
+		for (int k = i; k > 0; --k)
+		{
+			GetRange(Holes[k].HoleID, MinX, MaxX);
+			GetRange(Holes[k - 1].HoleID, OthMinX, OthMaxX);
+			if (MinX < OthMinX)
+			{
+				std::swap(Holes[k], Holes[k - 1]);
+			}
+		}
+	}
+	
+	if(i<Holes.size()-1)
+	{
+		for (int k = i; k < Holes.size() - 1; ++k)
+		{
+			GetRange(Holes[k].HoleID, MinX, MaxX);
+			GetRange(Holes[k + 1].HoleID, OthMinX, OthMaxX);
+
+			if (MinX > OthMinX)
+			{
+				std::swap(Holes[k], Holes[k + 1]);
+			}
+		}
+	}
+
+	MarkNeedUpdate();
 }
 
 void SolidWall::CopyHoles(std::vector<FWallHoleInfo> &InHoles)
@@ -1066,9 +1280,131 @@ void SolidWall::OnDestroy()
 	Wall::OnDestroy();
 }
 
-void SolidWall::MarkNeedUpdate()
+void SolidWall::Update()
 {
 	UpdateWallHoles();
-	Wall::MarkNeedUpdate();
+	Wall::Update();
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void VirtualWall::BuildCaps()
+{
+	Corner *pCorner0 = SUITE_GET_BUILDING_OBJ(P[0], Corner);
+	Corner *pCorner1 = SUITE_GET_BUILDING_OBJ(P[1], Corner);
+
+	kPoint DL = (pCorner1->Location - pCorner0->Location).Normalize();
+
+	if (pCorner0)
+	{
+		ObjectID connect_wall_0[2];
+		pCorner0->GetNearByWall(_ID, connect_wall_0[0], connect_wall_0[1], true);
+	
+		ObjectID wallID = connect_wall_0[0] != INVALID_OBJID ? connect_wall_0[0] : connect_wall_0[1];
+		Wall *pWall = SUITE_GET_BUILDING_OBJ(wallID, Wall);
+		if (pWall)
+		{
+			kLine l_center, l_left, l_right;
+			pWall->GetBorderLines(l_center, l_left, l_right);
+
+			if (P[0] == pWall->P[0])
+			{
+				float len_l = (kPoint(l_left.start.x, l_left.start.y) - pCorner1->Location).SizeSquared();
+				float len_r = (kPoint(l_right.start.x, l_right.start.y) - pCorner1->Location).SizeSquared();
+				if (len_l < len_r)
+				{
+					Points[ELeft0] = kPoint(l_left.start.x, l_left.start.y);
+					Points[ERight0] = Points[ELeft0];
+				}
+				else
+				{
+					Points[ELeft0] = kPoint(l_right.start.x, l_right.start.y);
+					Points[ERight0] = Points[ELeft0];
+				}
+			}
+			else
+			{
+				float len_l = (kPoint(l_left.end.x, l_left.end.y) - pCorner1->Location).SizeSquared();
+				float len_r = (kPoint(l_right.end.x, l_right.end.y) - pCorner1->Location).SizeSquared();
+				if (len_l < len_r)
+				{
+					Points[ELeft0] = kPoint(l_left.end.x, l_left.end.y);
+					Points[ERight0] = Points[ELeft0];
+				}
+				else
+				{
+					Points[ELeft0] = kPoint(l_right.end.x, l_right.end.y);
+					Points[ERight0] = Points[ELeft0];
+				}
+			}
+		}
+		else
+		{
+			Points[ELeft0] = pCorner0->Location;
+			Points[ERight0] = Points[ELeft0];
+		}
+	}
+
+	if (pCorner1)
+	{
+		ObjectID connect_wall_1[2];
+		pCorner1->GetNearByWall(_ID, connect_wall_1[0], connect_wall_1[1], true);
+
+		ObjectID wallID = connect_wall_1[0] != INVALID_OBJID ? connect_wall_1[0] : connect_wall_1[1];
+		Wall *pWall = SUITE_GET_BUILDING_OBJ(wallID, Wall);
+		if (pWall)
+		{
+			kLine l_center, l_left, l_right;
+			pWall->GetBorderLines(l_center, l_left, l_right);
+
+			if (P[1] == pWall->P[0])
+			{
+				float len_l = (kPoint(l_left.start.x, l_left.start.y) - pCorner0->Location).SizeSquared();
+				float len_r = (kPoint(l_right.start.x, l_right.start.y) - pCorner0->Location).SizeSquared();
+				if (len_l < len_r)
+				{
+					Points[ELeft1] = kPoint(l_left.start.x, l_left.start.y);
+					Points[ERight1] = Points[ELeft1];
+				}
+				else
+				{
+					Points[ELeft1] = kPoint(l_right.start.x, l_right.start.y);
+					Points[ERight1] = Points[ELeft1];
+				}
+			}
+			else
+			{
+				float len_l = (kPoint(l_left.end.x, l_left.end.y) - pCorner0->Location).SizeSquared();
+				float len_r = (kPoint(l_right.end.x, l_right.end.y) - pCorner0->Location).SizeSquared();
+				if (len_l < len_r)
+				{
+					Points[ELeft1] = kPoint(l_left.end.x, l_left.end.y);
+					Points[ERight1] = Points[ELeft1];
+				}
+				else
+				{
+					Points[ELeft1] = kPoint(l_right.end.x, l_right.end.y);
+					Points[ERight1] = Points[ELeft1];
+				}
+			}
+		}
+		else
+		{
+			Points[ELeft1] = pCorner1->Location;
+			Points[ERight1] = Points[ELeft1];
+		}
+	}
+}
+
+void VirtualWall::GetOriginalBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine)
+{
+	kPoint P0, P1;
+	GetLocations(P0, P1);
+
+	kVector3D Forward(P1.X - P0.X, P1.Y - P0.Y, 0);
+	Forward.Normalize();
+
+	CenterLine.Set(kVector3D(P0), kVector3D(P1));
+	LeftLine = RightLine = CenterLine;
 }
 

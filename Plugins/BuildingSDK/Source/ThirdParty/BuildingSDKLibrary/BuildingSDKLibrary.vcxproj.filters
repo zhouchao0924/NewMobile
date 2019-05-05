@@ -38,52 +38,7 @@
     <ClCompile Include="Private\Transaction\Transaction.cpp">
       <Filter>Private\Transaction</Filter>
     </ClCompile>
-    <ClCompile Include="Private\Elements\Anchor.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\BuildingConfig.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\BuildingObject.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Corner.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\DoorHole.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\ModelInstance.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\PlanePrimitive.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Primitive.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Room.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Skirting.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\SparseMap.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
     <ClCompile Include="Private\Elements\SuiteImpl.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Surface.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Wall.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\WallHole.cpp">
-      <Filter>Private\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Elements\Window.cpp">
       <Filter>Private\Elements</Filter>
     </ClCompile>
     <ClCompile Include="Private\BuildingSDK.cpp">
@@ -125,14 +80,200 @@
     <ClCompile Include="Private\Transaction\DRTransactionSystem.cpp">
       <Filter>Private\Transaction</Filter>
     </ClCompile>
-    <ClCompile Include="Private\Elements\PinCorner.cpp">
-      <Filter>Private\Elements</Filter>
+    <ClCompile Include="Private\FBXFile\FBXFile.cpp">
+      <Filter>Private\FBXFile</Filter>
     </ClCompile>
-    <ClCompile Include="Private\Importer\ImporterImpl.cpp">
-      <Filter>Private\Import</Filter>
+    <ClCompile Include="Thridparty\GLTF\src\Base64.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAccessor.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAnimation.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFAsset.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFBuffer.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFBufferView.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFCamera.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFDracoExtension.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFImage.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFMaterial.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFMesh.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFNode.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFObject.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFPrimitive.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFProgram.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFSampler.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFScene.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFShader.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFSkin.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFTechnique.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\GLTF\src\GLTFTexture.cpp">
+      <Filter>Thridparty\GLTF\src</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Light.cpp">
+      <Filter>Private\Elements\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Anchor.cpp">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\DoorHole.cpp">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\WallHole.cpp">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Window.cpp">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Skirting.cpp">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Corner.cpp">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\PinCorner.cpp">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\BuildingConfig.cpp">
+      <Filter>Private\Elements\Global</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Room.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Primitive.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\PlanePrimitive.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\ModelInstance.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
     </ClCompile>
     <ClCompile Include="Private\Elements\CompoudObject.cpp">
-      <Filter>Private\Elements</Filter>
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\BuildingObject.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Wall.cpp">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\Surface.cpp">
+      <Filter>Private\Elements\Surface</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\SparseMap.cpp">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\PointLight.cpp">
+      <Filter>Private\Elements\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\SpotLight.cpp">
+      <Filter>Private\Elements\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\SkyLight.cpp">
+      <Filter>Private\Elements\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Elements\PostProcess.cpp">
+      <Filter>Private\Elements\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DataExchange\FBXImportImpl.cpp">
+      <Filter>Private\DataExchange</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DataExchange\GLTFExporterImpl.cpp">
+      <Filter>Private\DataExchange</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Uitls\MathUtils.cpp">
+      <Filter>Private\Elements\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\Etc\Etc.cpp">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\Etc\EtcFilter.cpp">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\Etc\EtcImage.cpp">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\Etc\EtcMath.cpp">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_ETC1.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_R11.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RG11.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8A1.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGBA8.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcDifferentialTrys.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcIndividualTrys.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Thridparty\etclib\EtcCodec\EtcSortedBlockList.cpp">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\TargetPlatform\AndroidPlatform.cpp">
+      <Filter>Private\TargetPlatform</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\TargetPlatform\PCPlatform.cpp">
+      <Filter>Private\TargetPlatform</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\TargetPlatform\WebGLPlatform.cpp">
+      <Filter>Private\TargetPlatform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,52 +314,7 @@
     <ClInclude Include="Private\Transaction\Transaction.h">
       <Filter>Private\Transaction</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Elements\Anchor.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\BuildingConfig.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\BuildingObject.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Corner.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\DoorHole.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\ModelInstance.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\PlanePrimitive.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Primitive.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Room.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Skirting.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\SparseMap.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
     <ClInclude Include="Private\Elements\SuiteImpl.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Surface.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Wall.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\WallHole.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Elements\Window.h">
       <Filter>Private\Elements</Filter>
     </ClInclude>
     <ClInclude Include="Private\BuildingSDK.h">
@@ -323,20 +419,338 @@
     <ClInclude Include="Public\Math\kTriangle.h">
       <Filter>Public\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Elements\PinCorner.h">
-      <Filter>Private\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\IImporter.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="Private\Importer\ImporterImpl.h">
-      <Filter>Private\Import</Filter>
-    </ClInclude>
     <ClInclude Include="Private\Platform.h">
       <Filter>Private</Filter>
     </ClInclude>
+    <ClInclude Include="Private\FBXFile\FBXFile.h">
+      <Filter>Private\FBXFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\Base64.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAccessor.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAnimation.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFAsset.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFBuffer.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFBufferView.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFCamera.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFConstants.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFDracoExtension.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFExtension.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFImage.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFMaterial.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFMesh.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFNode.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFObject.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFOptions.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFPrimitive.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFProgram.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFSampler.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFScene.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFShader.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFSkin.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFTechnique.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\GLTF\include\GLTFTexture.h">
+      <Filter>Thridparty\GLTF\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\allocators.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\document.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\encodedstream.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\encodings.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\filereadstream.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\filewritestream.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\fwd.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\istreamwrapper.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\memorybuffer.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\memorystream.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\ostreamwrapper.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\pointer.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\prettywriter.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\rapidjson.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\reader.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\schema.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\stream.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\stringbuffer.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\writer.h">
+      <Filter>Thridparty\rapidjson\include</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\error\en.h">
+      <Filter>Thridparty\rapidjson\include\error</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\error\error.h">
+      <Filter>Thridparty\rapidjson\include\error</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\biginteger.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\diyfp.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\dtoa.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\ieee754.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\itoa.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\meta.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\pow10.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\regex.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\stack.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\strfunc.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\strtod.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\internal\swap.h">
+      <Filter>Thridparty\rapidjson\include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\msinttypes\inttypes.h">
+      <Filter>Thridparty\rapidjson\include\msinttypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\rapidjson\include\rapidjson\msinttypes\stdint.h">
+      <Filter>Thridparty\rapidjson\include\msinttypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Light.h">
+      <Filter>Private\Elements\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Anchor.h">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\DoorHole.h">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\WallHole.h">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Window.h">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Skirting.h">
+      <Filter>Private\Elements\Anchor</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Corner.h">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\PinCorner.h">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\BuildingConfig.h">
+      <Filter>Private\Elements\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Room.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Primitive.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\PlanePrimitive.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\ModelInstance.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
     <ClInclude Include="Private\Elements\CompoudObject.h">
-      <Filter>Private\Elements</Filter>
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\BuildingObject.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Wall.h">
+      <Filter>Private\Elements\Constructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\Surface.h">
+      <Filter>Private\Elements\Surface</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\SparseMap.h">
+      <Filter>Private\Elements\Corner</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\PointLight.h">
+      <Filter>Private\Elements\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\SpotLight.h">
+      <Filter>Private\Elements\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\SkyLight.h">
+      <Filter>Private\Elements\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Elements\PostProcess.h">
+      <Filter>Private\Elements\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\DataExchange\FBXImportImpl.h">
+      <Filter>Private\DataExchange</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\DataExchange\GLTFExporterImpl.h">
+      <Filter>Private\DataExchange</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Uitls\MathUtils.h">
+      <Filter>Private\Elements\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\Etc.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcColor.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcColorFloatRGBA.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcConfig.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcFilter.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcImage.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\Etc\EtcMath.h">
+      <Filter>Thridparty\etclib\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_ETC1.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_R11.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RG11.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGB8A1.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4Encoding_RGBA8.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcBlock4x4EncodingBits.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcDifferentialTrys.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcErrorMetric.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcIndividualTrys.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Thridparty\etclib\EtcCodec\EtcSortedBlockList.h">
+      <Filter>Thridparty\etclib\etccodec</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\ITargetPlatform.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\TargetPlatform\AndroidPlatform.h">
+      <Filter>Private\TargetPlatform</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\TargetPlatform\PCPlatform.h">
+      <Filter>Private\TargetPlatform</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\TargetPlatform\WebGLPlatform.h">
+      <Filter>Private\TargetPlatform</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Math\kString.h">
+      <Filter>Public\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -382,8 +796,71 @@
     <Filter Include="Public\Math">
       <UniqueIdentifier>{82395b3c-09cb-4628-9d19-99ba665c6dc7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Private\Import">
-      <UniqueIdentifier>{8f024166-cdc1-4997-bb8c-84c569c07c49}</UniqueIdentifier>
+    <Filter Include="Private\FBXFile">
+      <UniqueIdentifier>{f09c711a-49cb-4853-b9ed-020cbff24158}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty">
+      <UniqueIdentifier>{9017b249-3171-4f7d-aca7-cdb9acedad28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\GLTF">
+      <UniqueIdentifier>{6512b855-223f-4fe1-bd50-2b3a3ec29a05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\GLTF\include">
+      <UniqueIdentifier>{0a7aa6ec-10be-4fb5-8284-810e7913c865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\GLTF\src">
+      <UniqueIdentifier>{424ed46d-dfa5-4e63-ba2d-ebd7d6d4d6ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\rapidjson">
+      <UniqueIdentifier>{9f071c90-5ba0-4114-bf5b-73cfe3e27d8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\rapidjson\include">
+      <UniqueIdentifier>{30699c0b-d81c-4b2c-93f8-517f8b09c2a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\rapidjson\include\error">
+      <UniqueIdentifier>{6b3e5adf-2308-4269-9712-7feba9a7dc37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\rapidjson\include\internal">
+      <UniqueIdentifier>{3e400d09-df3a-4259-af96-7ff7b2e2c596}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\rapidjson\include\msinttypes">
+      <UniqueIdentifier>{fc5661e3-219a-4d29-a31b-76b854447574}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Light">
+      <UniqueIdentifier>{968bbcdd-d324-4860-91d4-0ac4d213f13b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Anchor">
+      <UniqueIdentifier>{f8fc225e-abc1-4ced-a58a-8e397d6bf16a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Corner">
+      <UniqueIdentifier>{18bde330-86a3-4f36-9562-65bc1dca38c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Global">
+      <UniqueIdentifier>{c3427b7f-8c4c-4cca-b29b-2cdad780f58b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Constructure">
+      <UniqueIdentifier>{a11f0278-cbbb-46f8-885c-c628920f9e1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Surface">
+      <UniqueIdentifier>{84a1de0f-8cb4-4b60-bac9-e7d6cd5cc3eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\DataExchange">
+      <UniqueIdentifier>{4ada6e89-1c44-4d47-a62c-9716a2740aa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Elements\Utils">
+      <UniqueIdentifier>{959676f3-3ef1-4510-b21d-07b0c9a4cb39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\etclib">
+      <UniqueIdentifier>{34a1d1aa-1d33-47c3-8f41-f150db8100f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\etclib\etc">
+      <UniqueIdentifier>{5814a232-4275-40e8-b9fe-b988d89932f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thridparty\etclib\etccodec">
+      <UniqueIdentifier>{b07c2a71-04d3-462e-bfaa-0bfa874d847c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\TargetPlatform">
+      <UniqueIdentifier>{1224543c-3470-40a1-862a-c4972fb01025}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

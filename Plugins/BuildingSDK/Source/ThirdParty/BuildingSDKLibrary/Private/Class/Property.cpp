@@ -3,6 +3,14 @@
 #include "Math/kVector2D.h"
 #include "Math/kVector3D.h"
 
+Property::Property(int InOffset, EChannelMask InMask) 
+	: ChannelMask(InMask)
+	, Offset(InOffset)
+	, bReadOnly(true)
+	, Desc(nullptr)
+{
+}
+
 IObjectDesc *Property::GetDesc()
 { 
 	return Desc; 
@@ -13,8 +21,22 @@ void Property::SetName(const char *InName)
 	PropName = InName;
 }
 
-IntProperty::IntProperty(int InOffset)
-	:Property(InOffset)
+void Property::SetValue(void *v, const IValue *value)
+{
+	OnSetValue(v, value);
+	OnAfterSetValue((IObject *)v);
+}
+
+void Property::OnAfterSetValue(IObject *pObj)
+{
+	if (ChannelMask!=EChannelNone)
+	{
+		pObj->MarkNeedUpdate(ChannelMask);
+	}
+}
+
+IntProperty::IntProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -28,7 +50,7 @@ IValue * IntProperty::GetValue(void *v)
 	return nullptr;
 }
 
-void IntProperty::SetValue(void *v, const IValue *value)
+void IntProperty::OnSetValue(void *v, const IValue *value)
 {
 	if (value->GetType() == kV_Int)
 	{
@@ -37,8 +59,8 @@ void IntProperty::SetValue(void *v, const IValue *value)
 	}
 }
 
-IntArrayProperty::IntArrayProperty(int InOffset)
-	:Property(InOffset)
+IntArrayProperty::IntArrayProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -47,22 +69,22 @@ IValue * IntArrayProperty::GetValue(void *v)
 	if (v)
 	{
 		std::vector<int> *intArray = (std::vector<int> *)(((char *)v + Offset));
-		return &GValueFactory->Create(intArray);
+		return &GValueFactory->Create(kArray<int>(*intArray));
 	}
 	return nullptr;
 }
 
-void IntArrayProperty::SetValue(void *v, const IValue *value)
+void IntArrayProperty::OnSetValue(void *v, const IValue *value)
 {
 	if (value->GetType() == kV_IntArray)
 	{
 		std::vector<int> *intArray = (std::vector<int> *)(((char *)v + Offset));
-		*intArray = value->IntArrayValue();
+		value->IntArrayValue().saveto(*intArray);
 	}
 }
 
-Vec2DArrayProperty::Vec2DArrayProperty(int InOffset)
-	:Property(InOffset)
+Vec2DArrayProperty::Vec2DArrayProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -71,22 +93,22 @@ IValue *Vec2DArrayProperty::GetValue(void *v)
 	if (v)
 	{
 		std::vector<kPoint> *vec2Array = (std::vector<kPoint> *)(((char *)v + Offset));
-		return &GValueFactory->Create(vec2Array);
+		return &GValueFactory->Create(kArray<kPoint>(*vec2Array));
 	}
 	return nullptr;
 }
 
-void Vec2DArrayProperty::SetValue(void *v, const IValue *value)
+void Vec2DArrayProperty::OnSetValue(void *v, const IValue *value)
 {
 	if (value->GetType() == kV_Vec2DArray)
 	{
 		std::vector<kPoint> *vec2Array = (std::vector<kPoint> *)(((char *)v + Offset));
-		*vec2Array = value->Vec2ArrayValue();
+		value->Vec2ArrayValue().saveto(*vec2Array);
 	}
 }
 
-BoolProperty::BoolProperty(int InOffset)
-	:Property(InOffset)
+BoolProperty::BoolProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -100,7 +122,7 @@ IValue * BoolProperty::GetValue(void *v)
 	return nullptr;
 }
 
-void BoolProperty::SetValue(void *v, const IValue *value)
+void BoolProperty::OnSetValue(void *v, const IValue *value)
 {
 	if (value->GetType() == kV_Bool)
 	{
@@ -109,8 +131,8 @@ void BoolProperty::SetValue(void *v, const IValue *value)
 	}
 }
 
-FloatProperty::FloatProperty(int InOffset)
-	:Property(InOffset)
+FloatProperty::FloatProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -124,7 +146,7 @@ IValue * FloatProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void FloatProperty::SetValue(void *obj, const IValue *value)
+void FloatProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Float)
 	{
@@ -133,8 +155,8 @@ void FloatProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-RawStringProperty::RawStringProperty(int InOffset)
-	:Property(InOffset)
+RawStringProperty::RawStringProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -148,8 +170,8 @@ IValue * RawStringProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-StdStringProperty::StdStringProperty(int InOffset)
-	:Property(InOffset)
+StdStringProperty::StdStringProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -163,7 +185,7 @@ IValue * StdStringProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void StdStringProperty::SetValue(void *obj, const IValue *value)
+void StdStringProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_StdString || value->GetType() ==kV_RawString)
 	{
@@ -172,8 +194,8 @@ void StdStringProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-Vec3DProperty::Vec3DProperty(int InOffset)
-	:Property(InOffset)
+Vec3DProperty::Vec3DProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -187,7 +209,7 @@ IValue * Vec3DProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void Vec3DProperty::SetValue(void *obj, const IValue *value)
+void Vec3DProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Vec3D)
 	{
@@ -196,8 +218,8 @@ void Vec3DProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-RotatorProperty::RotatorProperty(int InOffset)
-	:Property(InOffset)
+RotatorProperty::RotatorProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -211,7 +233,7 @@ IValue * RotatorProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void RotatorProperty::SetValue(void *obj, const IValue *value)
+void RotatorProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Rotator)
 	{
@@ -220,8 +242,8 @@ void RotatorProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-Vec2DProperty::Vec2DProperty(int InOffset)
-	:Property(InOffset)
+Vec2DProperty::Vec2DProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -235,7 +257,7 @@ IValue * Vec2DProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void Vec2DProperty::SetValue(void *obj, const IValue *value)
+void Vec2DProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Vec2D)
 	{
@@ -244,8 +266,8 @@ void Vec2DProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-BoxProperty::BoxProperty(int InOffset)
-	:Property(InOffset)
+BoxProperty::BoxProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -259,7 +281,7 @@ IValue * BoxProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void BoxProperty::SetValue(void *obj, const IValue *value)
+void BoxProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Bounds)
 	{
@@ -268,8 +290,8 @@ void BoxProperty::SetValue(void *obj, const IValue *value)
 	}
 }
 
-PlaneProperty::PlaneProperty(int InOffset)
-	:Property(InOffset)
+PlaneProperty::PlaneProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
 {
 }
 
@@ -283,12 +305,36 @@ IValue * PlaneProperty::GetValue(void *obj)
 	return nullptr;
 }
 
-void PlaneProperty::SetValue(void *obj, const IValue *value)
+void PlaneProperty::OnSetValue(void *obj, const IValue *value)
 {
 	if (value->GetType() == kV_Plane)
 	{
 		kPlane3D *plane = (kPlane3D *)(((char *)obj + Offset));
 		*plane = value->PlaneValue();
+	}
+}
+
+ColorProperty::ColorProperty(int InOffset, EChannelMask InMask)
+	:Property(InOffset, InMask)
+{
+}
+
+IValue *ColorProperty::GetValue(void *obj)
+{
+	if (obj)
+	{
+		kColor *color = (kColor *)(((char *)obj + Offset));
+		return &GValueFactory->Create(*color);
+	}
+	return nullptr;
+}
+
+void ColorProperty::OnSetValue(void *obj, const IValue *value)
+{
+	if (value->GetType() == kV_Color)
+	{
+		kColor *color = (kColor *)(((char *)obj + Offset));
+		*color = value->ColorValue();
 	}
 }
 

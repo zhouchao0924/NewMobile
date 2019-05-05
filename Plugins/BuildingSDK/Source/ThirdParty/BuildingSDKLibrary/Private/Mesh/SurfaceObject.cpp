@@ -4,8 +4,6 @@
 #include "IProperty.h"
 #include "MXFile/MXFile.h"
 
-extern std::string LoadStr(ISerialize &Ar);
-
 void FSurfaceParameter::Serialize(ISerialize &Ar, int Ver)
 {
 	if (Ar.IsSaving())
@@ -14,7 +12,7 @@ void FSurfaceParameter::Serialize(ISerialize &Ar, int Ver)
 	}
 	else if (Ar.IsLoading())
 	{
-		ParamName = LoadStr(Ar);
+		Ar << ParamName;
 	}
 }
 
@@ -162,7 +160,7 @@ void SurfaceObject::Serialize(ISerialize &Ar, int Ver)
 	}
 	else if (Ar.IsLoading())
 	{
-		Uri = LoadStr(Ar);
+		Ar << Uri;
 	}
 }
 
@@ -245,11 +243,11 @@ kVector4D SurfaceObject::GetVector(const char *name)
 	Get_Value(FSurfaceParameterVector, kVector4D(), OverrideVectorParameters)
 }
 
-extern std::string  GetTexSlotName(ETexSlot Slot);
+extern kString GetTexSlotName(ETexSlot Slot);
 
 int SurfaceObject::GetTexture(ETexSlot slot)
 {
-	std::string name = GetTexSlotName(slot);
+	kString name = GetTexSlotName(slot);
 	for (size_t i = 0; i < OverrideTextureParameters.size(); ++i)
 	{
 		FSurfaceParameterTexture &TexParam = OverrideTextureParameters[i];
@@ -306,6 +304,11 @@ IValue *SurfaceObject::FindParamValue(const char *name)
 		}
 	}
 	return nullptr;
+}
+
+void GetRefTextures(std::vector<FTexSlotInfo> &RefTextures, bool bExcludeDeprecated)
+{
+
 }
 
 

@@ -14,6 +14,11 @@
 #include "Elements/Corner.h"
 #include "Elements/CompoudObject.h"
 #include "Elements/PinCorner.h"
+#include "Elements/Light.h"
+#include "Elements/SPotLight.h"
+#include "Elements/PointLight.h"
+#include "Elements/PostProcess.h"
+#include "Elements/SkyLight.h"
 #include "MXFile/MXFile.h"
 #include "ClassLibaray.h"
 
@@ -44,6 +49,11 @@ void FClassLibaray::InitClassLibaray()
 	REG_CLASS(Skirting)
 	REG_CLASS(MXFile)
 	REG_CLASS(CompoundObject)
+	REG_CLASS(Light)
+	REG_CLASS(PointLight)
+	REG_CLASS(SpotLight)
+	REG_CLASS(SkyLight)
+	REG_CLASS(PostProcess)
 }
 
 void FClassLibaray::RegisterClass(ObjectDesc *ObjectClass)
@@ -77,6 +87,11 @@ Object *FClassLibaray::CreateObject(int ObjectType)
 		case ESolidWall: NewObj = new SolidWall(); break;
 		case EVirtualWall: NewObj = new VirtualWall(); break;
 		case ECompoundObject: NewObj = new CompoundObject(); break;
+		case ELight: NewObj = new Light(); break;
+		case EPointLight: NewObj = new PointLight(); break;
+		case ESpotLight: NewObj = new SpotLight(); break;
+		case ESkyLight: NewObj = new SkyLight(); break;
+		case EPostProcess: NewObj = new PostProcess(); break;
 		default: break;
 	}
 
@@ -85,7 +100,7 @@ Object *FClassLibaray::CreateObject(int ObjectType)
 		ClassMap::iterator it = _ClassMap.find(ObjectType);
 		if (it != _ClassMap.end())
 		{
-			NewObj->ClsDesc = it->second;
+			NewObj->_ClsDesc = it->second;
 		}
 	}
 

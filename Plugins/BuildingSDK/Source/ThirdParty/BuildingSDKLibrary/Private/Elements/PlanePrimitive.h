@@ -10,7 +10,7 @@ class PlanePrimitive :public  Primitive
 	DEFIN_CLASS()
 public:
 	PlanePrimitive();
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	int  GetMaterial(int ChannelID);
 	void SetMaterial(int InMaterialID, int ChannelID /*= 0*/);
 	void Build() override;
@@ -27,7 +27,7 @@ class FloorPlane :public  PlanePrimitive
 {
 	DEFIN_CLASS()
 public:
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	EObjectType GetType() { return EFloorPlane; }
 	int  GetPolygons(kPoint *&pPolygon, float *&pHeights, float &zOffset) override;
 public:
@@ -38,7 +38,7 @@ class CeilPlane :public PlanePrimitive
 {
 	DEFIN_CLASS()
 public:
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	EObjectType GetType() { return ECeilPlane; }
 	int  GetPolygons(kPoint *&pPolygon, float *&pHeights, float &zOffset) override;
 public:

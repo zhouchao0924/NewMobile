@@ -12,6 +12,8 @@
 #include "VaRestRequestJSON.h"
 #include "VaRestJsonObject.h"
 #include "ResourceMgr.h"
+#include "FileManagerGeneric.h"
+#include "Building/BuildingConfig.h"
 
 ADRGameMode::ADRGameMode(const FObjectInitializer &ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -208,6 +210,7 @@ void ADRGameMode::Startup()
 	if (NewBuildingSystem)
 	{
 		NewBuildingSystem->AddToWorld(GetWorld());
+		NewBuildingSystem->LoadingConfig(&BuildingConfig);
 	}
 }
 
@@ -284,6 +287,15 @@ void ADRGameMode::RequestHandler(UVaRestRequestJSON *JSONRequest)
 		}
 	}
 }
+//归递查找文件
+TArray<FString> ADRGameMode::File_Find(FString InPath, FString InFilter, bool InFiles, bool InDirectory)
+{
+	TArray<FString> Result;
+	Result.Empty();
+	FFileManagerGeneric::Get().FindFilesRecursive(Result, *InPath, *InFilter, InFiles, InDirectory);
+	return Result;
+}
+
 
 
 

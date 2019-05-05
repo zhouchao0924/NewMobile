@@ -16,7 +16,7 @@
 
 DLLEXPORT void* GetBuildingSDKFunction()
 {
-	static BuildingSDK sdk;
+	static BuildingSDKImpl sdk;
 	return &sdk;
 }
 

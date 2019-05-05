@@ -17,10 +17,15 @@ PlanePrimitive::PlanePrimitive()
 { 
 }
 
-void PlanePrimitive::Serialize(ISerialize &Ar)
+void PlanePrimitive::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	Primitive::Serialize(Ar);
+	Primitive::Serialize(Ar, Ver);
+
+	BeginChunk<PlanePrimitive>(Ar);
+
 	Ar << SurfaceID;
+	
+	EndChunk<PlanePrimitive>(Ar);
 }
 
 int  PlanePrimitive::GetMaterial(int ChannelID)
@@ -191,8 +196,9 @@ BEGIN_DERIVED_CLASS(FloorPlane, PlanePrimitive)
 	ADD_PROP(RoomID, IntProperty)
 END_CLASS()
 
-void FloorPlane::Serialize(ISerialize &Ar)
+void FloorPlane::Serialize(ISerialize &Ar, unsigned int Ver)
 {
+	PlanePrimitive::Serialize(Ar, Ver);
 }
 
 int FloorPlane::GetPolygons(kPoint *&pPolygon, float *&pHeights, float &zOffset)
@@ -218,8 +224,9 @@ BEGIN_DERIVED_CLASS(CeilPlane, PlanePrimitive)
 	ADD_PROP(RoomID, IntProperty)
 END_CLASS()
 
-void CeilPlane::Serialize(ISerialize &Ar)
+void CeilPlane::Serialize(ISerialize &Ar, unsigned int Ver)
 {
+	PlanePrimitive::Serialize(Ar, Ver);
 }
 
 int CeilPlane::GetPolygons(kPoint *&pPolygon, float *&pHeights, float &zOffset)

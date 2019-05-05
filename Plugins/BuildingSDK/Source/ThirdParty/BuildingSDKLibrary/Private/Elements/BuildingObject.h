@@ -14,20 +14,20 @@ public:
 	BuildingObject();
 	~BuildingObject() {}
 	ISuite *GetSuite() { return _Suite; }
-	void Serialize(ISerialize &Ar)override;
+	void Serialize(ISerialize &Ar, unsigned int Ver)override;
 	EObjectType GetType() override { return EBuildingObject; }
-	virtual void MarkNeedUpdate() { bNeedUpdate = true; }
 	virtual bool GetBox2D(kPoint &Orignal, kPoint &Range) { return false; }
 	virtual void OnCreate() {}
 	virtual void OnDestroy() {}
 	virtual void GetCorners(std::vector<Corner *> &Corners) {};
+	void MarkNeedUpdate(EChannelMask Mask = EChannelAll) override;
 	void SetID(ObjectID InID) { _ID = InID; }
-	Anchor *CreateAnchor(const kVector3D &Location) { return nullptr; }		
+	virtual Anchor *CreateAnchor() { return nullptr; }		
+	virtual void Delete() override;
+	friend class Anchor;
 protected:
-protected:
-	friend class		 SuiteImpl;
-	bool				 bNeedUpdate;
-	std::vector<ObjectID> Anchors;
+	friend class		  SuiteImpl;
+	std::vector<ObjectID> AnchorSlots;
 	class ISuite		 *_Suite;
 };
 

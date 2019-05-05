@@ -5,6 +5,7 @@
 #include "Math/kVector2D.h"
 #include "Class/Object.h"
 #include "IMeshObject.h"
+#include "Math/kString.h"
 
 typedef __int64	ModelSectionID;
 
@@ -26,29 +27,29 @@ struct FTexSlotInfo
 	int				iSlot;
 	int				iTex;
 	ETexSlot		slotType;
-	std::string		TexParamName;
+	kString			TexParamName;
 };
 
 struct FScalarSlotInfo
 {
 	FScalarSlotInfo() { iSlot = -1; FloatValue = 0; }
-	int				iSlot;
+	int				 iSlot;
 	float			 FloatValue;
-	std::string		 ParamName;
+	kString			 ParamName;
 };
 
 struct FVectorSlotInfo
 {
 	FVectorSlotInfo() { iSlot = -1; LinearValue = kLinearColor(); }
 	int				iSlot;
-	kLinearColor			LinearValue;
-	std::string		ParamName;
+	kLinearColor	LinearValue;
+	kString			ParamName;
 };
 
 class FSurfaceParameter
 {
 public:
-	std::string	ParamName;
+	kString		ParamName;
 	virtual IValue *GetValue() { return nullptr; }
 	virtual void Serialize(ISerialize &Ar, int Ver);
 };
@@ -97,7 +98,8 @@ class SurfaceObject :public ISurfaceObject
 {
 public:
 	const char *GetUri() override;
-	int GetType() override { return Type; }
+	int  GetType() override { return Type; }
+	void SetType(int InType) { Type = InType; }
 	void Serialize(ISerialize &Ar, int Ver);
 	void SetSource(int type, const char *Uri) override;
 
@@ -113,9 +115,10 @@ public:
 
 	int   GetTexture(ETexSlot slot) override;
 	IValue *FindParamValue(const char *name) override;
+	friend class MXFile;
 protected:
 	int										Type;
-	std::string								Uri;
+	kString									Uri;
 	std::vector<FSurfaceParameterFloat>		OverrideFloatParameters;
 	std::vector<FSurfaceParameterVec2>		OverrideVec2Parameters;
 	std::vector<FSurfaceParameterVec3>		OverrideVec3Parameters;

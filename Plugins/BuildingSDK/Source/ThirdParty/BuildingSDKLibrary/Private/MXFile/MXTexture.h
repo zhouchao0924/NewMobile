@@ -19,6 +19,7 @@ public:
 	void Init(int Width, int Height, ETextureFormat InFormat, bool bSRGB, const char *InData, int NumBytes);
 	void Serialize(ISerialize &Ar, int Ver);
 	void SetNum(int Num) { Data.resize(Num); }
+	void StripRawData();
 	std::vector<FCompressedImage2D>	CompressedImages;
 	ETextureFormat				SourceFormat;
 	int							SizeX, SizeY;

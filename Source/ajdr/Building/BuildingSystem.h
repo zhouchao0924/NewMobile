@@ -266,7 +266,8 @@ public:
 	//UFUNCTION(BlueprintCallable, Category = "Suite")
 	int32 GetAllObjects(IObject** &ppOutObject, EObjectType InClass = EUnkownObject,bool bIncludeDeriveType=true);
 
-	void LoadingConfig(FBuildingConfig * Config);
+	void LoadingConfig(FBuildingConfig *Config);
+
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 	void GetAllCornerActorLoction(TArray<FVector2D> &OutAllCornerActorLoction, int32 objectID);
 
@@ -330,12 +331,6 @@ public:
 		void SetObjFVector2D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector2D& FVectorValue);
 	UFUNCTION(BlueprintCallable, Category = "Suite")
 		void SetObjFVector4D(const int32& ObjID, UPARAM(ref) FString& ValueName, UPARAM(ref)FVector4& FVectorValue);
-	UFUNCTION(BlueprintCallable, Category = "Suite")
-		void SetADataList(const FADatac AData);
-	UFUNCTION(BlueprintCallable, Category = "Suite")
-		void SetLightDataList(const FLightDatac LightData);
-	UFUNCTION(BlueprintCallable, Category = "Suite")
-		void SetDWDataList(const FDWDatac DWData);
 protected:
 	void LoadObjInfo();
 	void OnAddObject(IObject *RawObj);
@@ -343,12 +338,10 @@ protected:
 	void OnUpdateObject(IObject *RawObj, unsigned int ChannelMask);
 	void ClearObjInfo(FObjectInfo *ObjInfo);
 	FObjectInfo *NewSuiteData(IObject *RawObj);
-	ADRActor *SpawnActorByObject(IObject *RawObj,UWorld *World, FObjectInfo &ObjInfo);
+	ADRActor *SpawnActorByObject(UWorld *World, FObjectInfo &ObjInfo);
 	int32 FindHostWorld(UWorld *World);
 	ADRActor *SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo &ObjInfo, int ObjectType);
-	ADRActor *SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
-	ADRActor *SpawnLightComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo);
-	void SpawnDWModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
+	ADRActor *SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo);
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Suite")
 	FString						Filename;
@@ -366,9 +359,5 @@ public:
 	ISuite						*Suite;
 	FSlateContext				SlateContext;
 	static	IBuildingSDK		*BuildingSDK;
-	TArray<FADatac>				ADataList;
-	TArray<FLightDatac>		    LightDataList;
-	TArray<FDWDatac>		    DWDataList;
-	bool						DWHasLoad;
 };
 

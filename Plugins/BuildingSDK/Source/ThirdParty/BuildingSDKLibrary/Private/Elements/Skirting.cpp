@@ -11,28 +11,30 @@
 #include "Class/Property.h"
 
 BEGIN_DERIVED_CLASS(Skirting, Anchor)
-	ADD_PROP(RoomID, IntProperty)
 	ADD_PROP(Extent, Vec3DProperty)
 	ADD_PROP(SkirtingResID, StdStringProperty)
 END_CLASS()
 
 Skirting::Skirting()
-	:RoomID(INVALID_OBJID)
-	,SkirtingType(SKirtingNone)
+	: SkirtingType(SKirtingNone)
 {
 }
 
-void Skirting::Serialize(ISerialize &Ar)
+void Skirting::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	Anchor::Serialize(Ar);
+	Anchor::Serialize(Ar, Ver);
 
-	SERIALIZE_VEC(SkirtingModels);
+	BeginChunk<Skirting>(Ar);
+
 	KSERIALIZE_ENUM(ESkirtingType, SkirtingType);
+	SERIALIZE_VEC(SkirtingModels);
+
+	EndChunk<Skirting>(Ar);
 }
 
 void Skirting::OnCreate()
 {
-	Room *pRoom = SUITE_GET_BUILDING_OBJ(RoomID, Room);
+	Room *pRoom = SUITE_GET_BUILDING_OBJ(OwnerID, Room);
 
 	if (pRoom && SkirtingResID.length()>0)
 	{
@@ -226,6 +228,19 @@ void Skirting::AddSkirtingModel(const kPoint &Right, const kPoint &P0, const kPo
 			}
 		}
 	}
+}
+
+IValue *Skirting::GetFunctionProperty(const std::string &name)
+{
+	IValue *pValue = Anchor::GetFunctionProperty(name);
+	if (!pValue)
+	{
+		if (name == "RoomID")
+		{
+			pValue = &GValueFactory->Create(OwnerID);
+		}
+	}
+	return pValue;
 }
 	
 void Skirting::Link(ModelInstance *InModel)

@@ -18,20 +18,18 @@ BEGIN_DERIVED_CLASS(BuildingConfig, BuildingObject)
 	ADD_PROP(DefaultDoor, StdStringProperty)
 	ADD_PROP(DefaultDoorFrame, StdStringProperty)
 	ADD_PROP(DefaultWindow, StdStringProperty)
+	ADD_PROP(SkyLight, IntProperty)
+	ADD_PROP(PostProcess, IntProperty)
 END_CLASS()
 
 BuildingConfig::BuildingConfig()
-	:WallMaterialType(0)
-	,FloorMaterialType(0)
-	,CeilMaterialType(0)
-	,bCeilVisible(true)
-	,Tolerance(0.05f)
+	: WallMaterialType(0)
+	, FloorMaterialType(0)
+	, CeilMaterialType(0)
+	, bCeilVisible(true)
+	, Tolerance(0.05f)
+	, SkyLight(INVALID_OBJID)
+	, PostProcess(INVALID_OBJID)
 {
 }
-
-void BuildingConfig::Serialize(ISerialize &Ar)
-{
-	BuildingObject::Serialize(Ar);
-}
-
 

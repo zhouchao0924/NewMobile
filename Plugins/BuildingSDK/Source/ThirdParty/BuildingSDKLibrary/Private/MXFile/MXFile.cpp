@@ -5,45 +5,10 @@
 #include "IBuildingSDK.h"
 #include "Mesh/MeshObject.h"
 #include "Stream/FileStream.h"
+#include "Mesh/SurfaceObject.h"
+#include "Math/kString.h"
 
-static std::string FingerMark = "1*&343!2)*Yds;Qd^`}/?3,";
-
-std::string LoadStr(ISerialize &Ar)
-{
-	std::string Value;
-	assert(Ar.IsLoading());
-
-	int Len = 0;
-	Ar << Len;
-	bool LoadUCS2Char = Len < 0;
-	if (LoadUCS2Char)
-	{
-		Len = -Len;
-	}
-
-	if (Len > 0)
-	{
-		if (LoadUCS2Char)
-		{
-			std::vector<wchar_t> str(Len);
-			Ar.Serialize(&str[0], Len * sizeof(wchar_t));
-			Value = (char *)&str[0];
-		}
-		else
-		{
-			std::vector<char> str(Len);
-			Ar.Serialize(&str[0], Len * sizeof(char));
-			Value = &str[0];
-		}
-	}
-
-	return Value;
-}
-
-void SaveStr(ISerialize &Ar, std::string &str)
-{
-
-}
+static kString FingerMark = "1*&343!2)*Yds;Qd^`}/?3,";
 
 bool LoadBool(ISerialize &Ar)
 {
@@ -52,18 +17,26 @@ bool LoadBool(ISerialize &Ar)
 	return Value != 0;
 }
 
+void SaveBool(ISerialize &Ar, bool bValue)
+{
+	int Value = bValue ? 1 : 0;
+	Ar << Value;
+}
+
 kBox3D LoadBox(ISerialize &Ar)
 {
 	kBox3D Value;
-	char bValid;
+	unsigned char bValid;
 	Ar << Value;
 	Ar << bValid;
 	return Value;
 }
 
-void SaveBox(ISerialize &Ar, kBox3D box)
+void SaveBox(ISerialize &Ar, kBox3D &box)
 {
-
+	unsigned char bValid = box.IsInvalid()? 0 : 1;
+	Ar << box;
+	Ar << bValid;
 }
 
 void FChunk::Serialize(ISerialize &Ar, int Ver)
@@ -73,7 +46,7 @@ void FChunk::Serialize(ISerialize &Ar, int Ver)
 }
 
 FResourceSummary::FResourceSummary()
-	: bCompressed(0)
+	: CompressedFlag(0)
 	, HeadVersion(-1)
 	, ResType(EResUnknown)
 	, ModifyVersion(0)
@@ -88,23 +61,24 @@ void  FResourceSummary::Serialize(ISerialize &Ar)
 	if (Ar.IsLoading())
 	{
 		Ar << HeadVersion;
-		ResID = LoadStr(Ar);
+		Ar << ResID;
 		Ar << LocalVersion;
-		Ar << bCompressed;
-		ResourceName = LoadStr(Ar);
+
+		Ar << CompressedFlag;
+		Ar << ResourceName;
 
 		//ver2 <--
 		if (HeadVersion <= RESOURCE_HEADERVER_2)
 		{
 			int	SizeX, SizeY, SizeZ;
-			std::string Brand, Subfamily, CategoryName, Desc;
+			kString Brand, Subfamily, CategoryName, Desc;
 			char	PerfPosition;
 			bool	bUsePhysics;
-			Brand = LoadStr(Ar);
-			Subfamily = LoadStr(Ar);
-			CategoryName = LoadStr(Ar);
+			Ar << Brand;
+			Ar << Subfamily;
+			Ar << CategoryName;
 			Ar << PerfPosition;
-			Ar << bUsePhysics;
+			bUsePhysics = LoadBool(Ar);
 			Ar << SizeX;
 			Ar << SizeY;
 			Ar << SizeZ;
@@ -121,7 +95,7 @@ void  FResourceSummary::Serialize(ISerialize &Ar)
 		Dependences.resize(NumDeps);
 		for (int i = 0; i < Dependences.size(); ++i)
 		{
-			Dependences[i] = LoadStr(Ar);
+			Ar << Dependences[i];
 		}
 
 		Ar << BodyVersion;
@@ -131,8 +105,10 @@ void  FResourceSummary::Serialize(ISerialize &Ar)
 		Ar << HeadVersion;
 		Ar << ResID;
 		Ar << LocalVersion;
-		Ar << bCompressed;
+
+		Ar << CompressedFlag;
 		Ar << ResourceName;
+		
 		Ar << ModifyVersion;
 
 		int NumDeps = Dependences.size();
@@ -157,6 +133,8 @@ END_CLASS()
 void MXFile::FHeader::Serialize(ISerialize &Ar)
 {
 	FResourceSummary::Serialize(Ar);
+
+	size_t pos0 = Ar.Tell();
 
 	if (Ar.IsSaving())
 	{
@@ -231,10 +209,11 @@ void MXFile::FHeader::Serialize(ISerialize &Ar)
 }
 
 //////////////////////////////////////////////////////////////////////////
-void SaveMark(ISerialize &Ar)
+void SaveMark(char resType, ISerialize &Ar)
 {
 	if (Ar.IsSaving())
 	{
+		Ar << resType;
 		Ar << FingerMark;
 	}
 }
@@ -243,7 +222,8 @@ bool CheckMark(ISerialize &Ar)
 {
 	if (Ar.IsLoading())
 	{
-		std::string Mark = LoadStr(Ar);
+		kString Mark;
+		Ar << Mark;
 		if (Mark == FingerMark)
 		{
 			return true;
@@ -364,7 +344,7 @@ void MXFile::Serialize(ISerialize &Ar)
 			texChunk.Size = int(Ar.Tell() - texChunk.Offset);
 		}
 
-		Ar << LocalBounds;
+		SaveBox(Ar, LocalBounds);
 		Ar << ViewLoc.EyeLoc;
 		Ar << ViewLoc.FocusLoc;
 		Ar << ViewLoc.EyeDistance;
@@ -426,6 +406,7 @@ void MXFile::Serialize(ISerialize &Ar)
 			Ar << type;
 
 			SurfaceObject *pSurface = new SurfaceObject();
+			pSurface->SetType(type);
 			pSurface->Serialize(Ar, m_Header.BodyVersion);
 			m_Materials.push_back(pSurface);
 		}
@@ -444,6 +425,30 @@ void MXFile::Serialize(ISerialize &Ar)
 		Ar << ViewLoc.EyeLoc;
 		Ar << ViewLoc.FocusLoc;
 		Ar << ViewLoc.EyeDistance;
+
+		if (m_Header.BodyVersion > MODELFILE_BODY_VER_3)
+		{
+			KSERIALIZE_ENUM(ECenterAdjustType, CenterType);
+			Ar << Offset;
+		}
+
+		if (m_Header.BodyVersion == MODELFILE_BODY_VER_5)
+		{
+			Ar << Scale3D;
+			ResetSize();
+		}
+		else if (m_Header.BodyVersion > MODELFILE_BODY_VER_5)
+		{
+			size_t pos = Ar.Tell();
+			Ar << DepthInMM;
+			Ar << WidthInMM;
+			Ar << HeightInMM;
+			CaclScale3D();
+		}
+		else
+		{
+			ResetSize();
+		}
 	}
 }
 
@@ -464,7 +469,7 @@ void MXFile::SerializeHeader(ISerialize &Ar)
 	else if (Ar.IsLoading())
 	{
 		Ar << Id;
-		URL = LoadStr(Ar);
+		Ar << URL;
 
 		FResourceSummary *Header = GetSummary();
 		if (Header)
@@ -472,7 +477,7 @@ void MXFile::SerializeHeader(ISerialize &Ar)
 			Header->Serialize(Ar);
 			if (Header->HeadVersion > RESOURCE_HEADERVER_1)
 			{
-				JsonStr = LoadStr(Ar);
+				Ar << JsonStr;
 			}
 		}
 	}
@@ -520,6 +525,92 @@ bool MXFile::GetTextureData(int iTex, int MipIndex, void *&pData, int &nBytes)
 		}
 	}
 	return false;
+}
+
+
+#define ADD_UNIQUE_VEC(vec, ivalue){	\
+	size_t ik = 0;						\
+	for (; ik < vec.size(); ++ik) {		\
+		if (vec[ik] == ivalue) {		\
+			break;						\
+		}								\
+	}									\
+	if (ik >= vec.size()){				\
+		vec.push_back(ivalue);			\
+	}									\
+}
+
+void MXFile::ClearUnrefTexture()
+{
+	std::vector<int> UsedTextures;
+
+	for (size_t i = 0; i < m_Materials.size(); ++i)
+	{
+		std::vector<FTexSlotInfo> RefTextures;
+		SurfaceObject *material = m_Materials[i];
+		if (material)
+		{
+			for (size_t i = 0; i < material->OverrideTextureParameters.size(); ++i)
+			{
+				int iTex = material->OverrideTextureParameters[i].Value;
+				if (iTex >= 0)
+				{
+					ADD_UNIQUE_VEC(UsedTextures, iTex);
+				}
+			}
+		}
+	}
+
+	std::vector<int> Remap;
+	Remap.resize(m_Textures.size());	
+	std::vector<FModelTexture*> newTextures;
+
+	int k = 0;
+	for (int i = 0; i < m_Textures.size(); ++i)
+	{
+		size_t ik = 0;
+		for (; ik < UsedTextures.size(); ++ik)
+		{
+			if(UsedTextures[ik]==i)
+			{
+				break;
+			}
+		}
+
+		if (ik < UsedTextures.size())
+		{
+			Remap[i] = newTextures.size();
+			newTextures.push_back(m_Textures[i]);
+		}
+		else
+		{
+			if (m_Textures[i])
+			{
+				delete m_Textures[i];
+				m_Textures[i] = 0;
+			}
+			Remap[i] = -1;
+		}
+	}
+
+	m_Textures.swap(newTextures);
+
+	for (size_t i = 0; i < m_Materials.size(); ++i)
+	{
+		std::vector<FTexSlotInfo> RefTextures;
+		SurfaceObject *material = m_Materials[i];
+		if (material)
+		{
+			for (size_t i = 0; i < material->OverrideTextureParameters.size(); ++i)
+			{
+				int iTex = material->OverrideTextureParameters[i].Value;
+				if (iTex >= 0)
+				{
+					material->OverrideTextureParameters[i].Value = Remap[iTex];
+				}
+			}
+		}
+	}
 }
 
 

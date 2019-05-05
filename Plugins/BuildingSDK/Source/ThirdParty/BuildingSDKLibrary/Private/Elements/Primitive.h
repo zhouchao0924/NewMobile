@@ -11,11 +11,12 @@ public:
 	Primitive();
 	~Primitive();
 	virtual bool IsVisible();
+	bool IsRoot() override { return true; }
 	virtual void SetVisible(bool bInVisible);
 	virtual void ClearCached();
 	virtual void Build() {}
-	virtual void MarkNeedUpdate();
-	virtual void Serialize(ISerialize &Ar);
+	virtual void Serialize(ISerialize &Ar, unsigned int Ver);
+	void Update() override;
 	int  GetMeshCount() override { return Mesh? 1 : 0; }
 	IMeshObject *GetMeshObject(int MeshIndex, bool bBuildIfNotExist = true) override;
 	int   GetSurfaceCount();
@@ -31,6 +32,7 @@ public:
 protected:
 	friend class MeshObject;
 	FMeshSection *AddMesh();
+	void InitMesh();
 	void AddQuad(FMeshSection *Mesh, const kVector3D &V0, const kVector3D &V1, const kVector3D &V2, const kVector3D &V3, const kVector3D &Normal, const kVector3D &Tan, int MaterialIndex);
 	int  AddVert(FMeshSection *Mesh, const kVector3D &Vert, const kVector3D &Normal, const kVector3D &Tan, const kPoint &UV, const kPoint &LightmapUV);
 	int  AddVertDefaultUV(FMeshSection *Mesh, const kVector3D &Vert, const kVector3D &Normal, const kVector3D &Tan, const kPoint &LightmapUV);

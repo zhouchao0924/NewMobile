@@ -10,6 +10,7 @@
 
 void FWallSegment::Serialize(ISerialize &Ar)
 {
+	Ar << bCW;
 	Ar << WallID;
 	Ar << SourceCornerID;
 	Ar << bInverseWall;
@@ -20,8 +21,6 @@ BEGIN_DERIVED_CLASS(Room, BuildingObject)
 	ADD_PROP_READONLY(CeilID, IntProperty)
 	ADD_PROP_READONLY(FloorID, IntProperty)
 	ADD_PROP_READONLY(SubRooms, IntArrayProperty)
-	ADD_PROP_READONLY(InnerPolygons, Vec2DArrayProperty)
-	ADD_PROP_READONLY(OuterPolygons, Vec2DArrayProperty)
 END_CLASS()
 
 Room::Room()
@@ -31,14 +30,17 @@ Room::Room()
 {
 }
 
-void Room::Serialize(ISerialize &Ar)
+void Room::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	BuildingObject::Serialize(Ar);
+	BuildingObject::Serialize(Ar, Ver);
+
+	BeginChunk<Room>(Ar);
+
 	Ar << SkirtingCielID;
 	Ar << SkirtingFloorID;
-
-	SERIALIZE_VEC(SubRooms);
 	SERIALIZE_COMPLEXVEC(WallSegments);
+
+	EndChunk<Room>(Ar);
 }
 
 void Room::Init(ObjectID *pCorners, int Count)
@@ -61,13 +63,11 @@ void Room::Init(ObjectID *pCorners, int Count)
 			if (pWall->P[0] == p1)
 			{
 				Segment.bInverseWall = true;
-				assert(pWall->RoomRight == INVALID_OBJID);
 				pWall->RoomRight = _ID;
 			}
 			else
 			{
 				Segment.bInverseWall = false;
-				assert(pWall->RoomLeft == INVALID_OBJID);
 				pWall->RoomLeft = _ID;
 			}
 		}
@@ -153,7 +153,7 @@ void Room::BuildCache()
 			FWallSegment &Segment = WallSegments[i];
 			Wall *pWall = SUITE_GET_BUILDING_OBJ(Segment.WallID, Wall);
 			assert(pWall);
-				
+
 			kLine l_center, l_right, l_left;
 			pWall->GetBorderLines(l_center, l_left, l_right);
 
@@ -246,7 +246,7 @@ bool Room::HasEmptyWall()
 	return false;
 }
 
-void Room::MarkNeedUpdate()
+void Room::Update()
 {
 	bCachePolygons = false;
 
@@ -274,7 +274,7 @@ void Room::MarkNeedUpdate()
 		pSkirtingFloor->MarkNeedUpdate();
 	}
 
-	BuildingObject::MarkNeedUpdate();
+	BuildingObject::Update();
 }
 
 void Room::OnDestroy()
@@ -377,6 +377,27 @@ kPoint Room::GetRight(int index)
 	return kPoint();
 }
 
+IValue *Room::GetFunctionProperty(const std::string &name)
+{
+	IValue *pValue = BuildingObject::GetFunctionProperty(name);
+
+	if (!pValue)
+	{
+		if (name == "InnerPolygons")
+		{
+			BuildCache();
+			pValue = &GValueFactory->Create(kArray<kPoint>(InnerPolygons));
+		}
+		else if (name == "OuterPolygons")
+		{
+			BuildCache();
+			pValue = &GValueFactory->Create(kArray<kPoint>(OuterPolygons));
+		}
+	}
+
+	return pValue;
+}
+
 bool Room::GetSegments(std::vector<int> &Polygons, std::vector<FSegmentPoint> &Points, bool bFloor)
 {
 	BuildCache();
@@ -419,11 +440,14 @@ bool Room::GetSegments(std::vector<int> &Polygons, std::vector<FSegmentPoint> &P
 			{
 				for (int iHole = pHoles->size()-1; iHole >=0 ; --iHole)
 				{
-					FWallHoleInfo &HoleInfo = (*pHoles)[iHole];
+					float MinX, MaxX;
+					FWallHoleInfo &HoleInfo = (*pHoles)[iHole];					
+					pWall->GetRange(HoleInfo.HoleID, MinX, MaxX);
+
 					if (HoleInfo.ObjType == EDoorHole)
 					{
-						kPoint startPos = P0 + Forward*HoleInfo.MaxX + RightOffset;
-						kPoint  endPos  = P0 + Forward*HoleInfo.MinX + RightOffset;
+						kPoint startPos = P0 + Forward*MaxX + RightOffset;
+						kPoint  endPos  = P0 + Forward*MinX + RightOffset;
 
 						Points.push_back(FSegmentPoint(startPos, Right, SegForward, Height, Seg.bCW, HoleInfo.HoleID));
 
@@ -438,12 +462,14 @@ bool Room::GetSegments(std::vector<int> &Polygons, std::vector<FSegmentPoint> &P
 			{
 				for (int iHole = 0; iHole < pHoles->size(); ++iHole)
 				{
+					float MinX, MaxX;
 					FWallHoleInfo &HoleInfo = (*pHoles)[iHole];
+					pWall->GetRange(HoleInfo.HoleID, MinX, MaxX);
+
 					if (HoleInfo.ObjType == EDoorHole)
 					{
-
-						kPoint startPos = P0 + Forward*HoleInfo.MinX + RightOffset;
-						kPoint endPos = P0 + Forward*HoleInfo.MaxX + RightOffset;
+						kPoint startPos = P0 + Forward*MinX + RightOffset;
+						kPoint endPos = P0 + Forward*MaxX + RightOffset;
 
 						Points.push_back(FSegmentPoint(startPos, Right, SegForward, Height, Seg.bCW, HoleInfo.HoleID));
 
@@ -456,6 +482,7 @@ bool Room::GetSegments(std::vector<int> &Polygons, std::vector<FSegmentPoint> &P
 			}
 		}			
 	}
+
 	return true;
 }
 

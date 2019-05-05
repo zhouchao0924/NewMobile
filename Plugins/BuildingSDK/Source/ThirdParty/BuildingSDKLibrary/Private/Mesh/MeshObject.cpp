@@ -2,12 +2,12 @@
 #include "MeshObject.h"
 #include "kTriangle.h"
 #include "MXFile/MXFile.h"
+#include "Elements/Primitive.h"
 
 extern bool LoadBool(ISerialize &Ar);
+extern void SaveBool(ISerialize &Ar, bool bValue); 
 extern kBox3D LoadBox(ISerialize &Ar);
-extern std::string LoadStr(ISerialize &Ar);
-extern void SaveStr(ISerialize &Ar, std::string &str);
-extern void SaveBox(ISerialize &Ar, kBox3D box);
+extern void SaveBox(ISerialize &Ar, kBox3D &box);
 
 void FConvexAggGeom::ConvexElem::Serialize(ISerialize &Ar)
 {
@@ -19,7 +19,7 @@ void FConvexAggGeom::ConvexElem::Serialize(ISerialize &Ar)
 	}
 	else if (Ar.IsSaving())
 	{
-		Ar << ElemBox;
+		SaveBox(Ar, ElemBox);
 	}
 }
 
@@ -48,14 +48,16 @@ void FConvexAggGeom::Serialize(ISerialize &Ar)
 	}
 }
 
-
 void MeshObject::Serialize(ISerialize &Ar, int Ver)
 {
 	if (Ar.IsSaving())
 	{
 		int NumMtrl = Surfaces.size();
 		Ar << NumMtrl;
-		Ar.Serialize(&Surfaces[0], NumMtrl * sizeof(int));
+		if (!Surfaces.empty())
+		{
+			Ar.Serialize(&Surfaces[0], NumMtrl * sizeof(int));
+		}
 
 		int NumSections = Meshes.size();
 		Ar << NumSections;
@@ -65,7 +67,7 @@ void MeshObject::Serialize(ISerialize &Ar, int Ver)
 			SerializeMeshSection(*Section, Ar, Ver);
 		}
 
-		SaveStr(Ar, Name);
+		Ar << Name;
 		SaveBox(Ar, Bounds);
 	}
 	else if (Ar.IsLoading())
@@ -73,7 +75,10 @@ void MeshObject::Serialize(ISerialize &Ar, int Ver)
 		int NumMtrl = 0;
 		Ar << NumMtrl;
 		Surfaces.resize(NumMtrl);
-		Ar.Serialize(&Surfaces[0], NumMtrl * sizeof(int));
+		if (!Surfaces.empty())
+		{
+			Ar.Serialize(&Surfaces[0], NumMtrl * sizeof(int));
+		}
 
 		int NumSection = 0;
 		Ar << NumSection;
@@ -90,7 +95,7 @@ void MeshObject::Serialize(ISerialize &Ar, int Ver)
 
 		if (Ver > MODELFILE_BODY_VER_6)
 		{
-			Name = LoadStr(Ar);
+			Ar << Name;
 			Bounds = LoadBox(Ar);
 		}
 	}
@@ -112,7 +117,7 @@ void MeshObject::SerializeMeshSection(FMeshSection &Section, ISerialize &Ar, int
 			kColor Color;
 			Ar << Section.Vertices[i];
 			Ar << Section.Normals[i];
-			Ar << bFlipTangentY;
+			SaveBool(Ar, bFlipTangentY);
 			Ar << Section.Tangents[i];
 			Ar << Color;
 			Ar << Section.UVs[i];
@@ -123,9 +128,9 @@ void MeshObject::SerializeMeshSection(FMeshSection &Section, ISerialize &Ar, int
 
 		Ar.Serialize(&Section.Indices[0], sizeof(int)*NumIndices);
 
-		Ar << Section.SectionBox;
-		Ar << Section.bEnableCollision;
-		Ar << Section.bSectionVisible;
+		SaveBox(Ar, Section.SectionBox);
+		SaveBool(Ar, Section.bEnableCollision);
+		SaveBool(Ar, Section.bSectionVisible);
 	}
 	else if (Ar.IsLoading())
 	{
@@ -134,6 +139,7 @@ void MeshObject::SerializeMeshSection(FMeshSection &Section, ISerialize &Ar, int
 		int NumVerts = 0;
 		Ar << NumVerts;
 
+		Section.VertCount = NumVerts;
 		Section.Vertices.resize(NumVerts);
 		Section.Normals.resize(NumVerts);
 		Section.Tangents.resize(NumVerts);
@@ -219,6 +225,12 @@ void MeshObject::SerializeUCX(ISerialize &Ar, int Ver)
 	}
 }
 
+void FSaveMaterialInfo::Serialize(ISerialize &Ar, int Ver)
+{
+	SERIALIZE_VEC(Surfaces);
+	SERIALIZE_VEC(SectionRefs);
+}
+
 //////////////////////////////////////////////////////////////////////////
 MeshObject::MeshObject(IObject *InOwner)
 	: Callback(nullptr)
@@ -267,16 +279,31 @@ void MeshObject::SaveMaterials()
 		{
 			SavedMaterialInfo = new FSaveMaterialInfo();
 		}
-
-		SavedMaterialInfo->Surfaces = Surfaces;
-		SavedMaterialInfo->SectionRefs.resize(nMesh);
-
-		for (size_t i = 0; i < nMesh; ++i)
-		{
-			FMeshSection *mesh = Meshes[i];
-			SavedMaterialInfo->SectionRefs[i] = mesh->SurfaceIndex;
-		}
+		GetMaterials(*SavedMaterialInfo);
 	}
+}
+
+void MeshObject::GetMaterials(FSaveMaterialInfo &SavedMaterial)
+{
+	size_t nMesh = Meshes.size();
+
+	SavedMaterial.Surfaces = Surfaces;
+	SavedMaterial.SectionRefs.resize(nMesh);
+
+	for (size_t i = 0; i < nMesh; ++i)
+	{
+		FMeshSection *mesh = Meshes[i];
+		SavedMaterial.SectionRefs[i] = mesh->SurfaceIndex;
+	}
+}
+
+void MeshObject::SetMaterials(FSaveMaterialInfo &SavedMaterial)
+{
+	if (!SavedMaterialInfo)
+	{
+		SavedMaterialInfo = new FSaveMaterialInfo();
+	}
+	*SavedMaterialInfo = SavedMaterial;
 }
 
 void MeshObject::RestoreMaterials()
@@ -293,17 +320,26 @@ void MeshObject::RestoreMaterials()
 		{
 			for (size_t i = 0; i < nNew; ++i)
 			{
-				ObjectID SurfaceID = SavedMaterialInfo->Surfaces[SavedMaterialInfo->SectionRefs[i]];
-				
-				size_t k = 0;
-				for (; k < newSurfaces.size(); ++k);
-				
-				if (k >= newSurfaces.size())
+				int index = SavedMaterialInfo->SectionRefs[i];
+				if (index < 0)
 				{
-					newSurfaces.push_back(SurfaceID);
+					oldIdxNew.push_back(-1);
+				}
+				else
+				{
+					ObjectID SurfaceID = SavedMaterialInfo->Surfaces[index];
+
+					size_t k = 0;
+					for (; k < newSurfaces.size() && newSurfaces[k]!=SurfaceID; ++k);
+
+					if (k >= newSurfaces.size())
+					{
+						newSurfaces.push_back(SurfaceID);
+					}
+
+					oldIdxNew.push_back(k);
 				}
 
-				oldIdxNew.push_back(k);
 			}
 
 			for (size_t i = 0; i < Meshes.size(); ++i)
@@ -312,7 +348,7 @@ void MeshObject::RestoreMaterials()
 				if (mesh)
 				{
 					int oldSurfaceIndex = SavedMaterialInfo->SectionRefs[i];
-					int newSurfaceIndex = oldIdxNew[oldSurfaceIndex];
+					int newSurfaceIndex = oldSurfaceIndex>=0? oldIdxNew[oldSurfaceIndex] : oldSurfaceIndex;
 					mesh->SurfaceIndex = newSurfaceIndex;
 				}
 			}
@@ -368,14 +404,24 @@ bool MeshObject::GetSectionMesh(int SectionIndex, float *&pVertices, float *&pNo
 	if (SectionIndex >= 0 && SectionIndex < Meshes.size())
 	{
 		FMeshSection *pSection = Meshes[SectionIndex];
-		pVertices = (float *)&(pSection->Vertices[0]);
-		pNormals = (float *)&(pSection->Normals[0]);
-		pTangents = (float *)&(pSection->Tangents[0]);
-		pUVs = (float *)&(pSection->UVs[0]);
-		pLightmapUVs = pSection->LightmapUVs.empty() ? nullptr : (float *)&(pSection->LightmapUVs[0]);
-		pIndices = &(pSection->Indices[0]);
+
 		NumIndices = (int)pSection->Indices.size();
 		NumVerts = (int)pSection->Vertices.size();
+
+		if (NumVerts > 0)
+		{
+			pVertices = (float *)&(pSection->Vertices[0]);
+			pNormals = (float *)&(pSection->Normals[0]);
+			pTangents = (float *)&(pSection->Tangents[0]);
+			pUVs = (float *)&(pSection->UVs[0]);
+		}
+		else
+		{
+			pVertices = pNormals = pTangents = pUVs = nullptr;
+		}
+
+		pLightmapUVs = pSection->LightmapUVs.empty() ? nullptr : (float *)&(pSection->LightmapUVs[0]);
+		pIndices = NumIndices>0? &(pSection->Indices[0]) : nullptr;
 	}
 	else
 	{
@@ -383,7 +429,8 @@ bool MeshObject::GetSectionMesh(int SectionIndex, float *&pVertices, float *&pNo
 		pVertices = pNormals = pUVs = pLightmapUVs = nullptr;
 		NumVerts = NumIndices = 0;
 	}
-	return NumVerts > 0;
+
+	return NumVerts > 0 && NumIndices>0;
 }
 
 int MeshObject::FindSurface(ObjectID SurfaceID)
@@ -508,7 +555,7 @@ void MeshObject::AddQuad(FMeshSection *Mesh, const kVector3D &V0, const kVector3
 	|		|
 	1-------0
 	*/
-	kPoint UVScale = kPoint((V1 - V0).Size(), (V2 - V1).Size());
+	kPoint UVScale = kPoint((V1 - V0).Size()*0.01f, (V2 - V1).Size()*0.01f);
 	const kPoint UVs[4] = { kPoint(1.0f, 1.0f), kPoint(0,1.0f), kPoint(0,0), kPoint(1.0f, 0) };
 
 	int Index0 = AddVert(Mesh, V0, Normal, Tan, UVs[0] * UVScale, UVs[0]);
@@ -526,7 +573,7 @@ int  MeshObject::AddVertDefaultUV(FMeshSection *Mesh, const kVector3D &Vert, con
 	Mesh->Vertices.push_back(Vert);
 	Mesh->Normals.push_back(Normal);
 	Mesh->Tangents.push_back(Tan);
-	Mesh->UVs.push_back(kPoint(Vert.x, Vert.y));
+	Mesh->UVs.push_back(Primitive::ToUV(kPoint(Vert.x, Vert.y)));
 	Mesh->LightmapUVs.push_back(LightmapUV);
 	return Index;
 }

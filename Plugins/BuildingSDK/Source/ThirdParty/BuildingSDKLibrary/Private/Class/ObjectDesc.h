@@ -31,10 +31,13 @@ public:
 		static void BuildProperties();
 
 #define ADD_PROP(propname, propcls)				\
-	ClsDesc->AddProperty(#propname, new propcls(int((__int64)&inst.##propname - (__int64)&inst)),false);
+	ClsDesc->AddProperty(#propname, new propcls(int((__int64)&inst.##propname - (__int64)&inst), EChannelNone),false);
+
+#define ADD_PROP_CHANNEL(propname, propcls, channnel)				\
+	ClsDesc->AddProperty(#propname, new propcls(int((__int64)&inst.##propname - (__int64)&inst), channnel),false);
 
 #define ADD_PROP_READONLY(propname, propcls)				\
-	ClsDesc->AddProperty(#propname, new propcls(int((__int64)&inst.##propname - (__int64)&inst)),true);
+	ClsDesc->AddProperty(#propname, new propcls(int((__int64)&inst.##propname - (__int64)&inst), EChannelNone),true);
 
 
 #define BEGIN_DERIVED_CLASS(clsname,superclsname)					\

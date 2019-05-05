@@ -15,7 +15,9 @@ public:
 	ObjectID GetID() override { return _ID; }
 	EObjectType GetType() override { return EObject; }
 	bool IsA(EObjectType Type) override;
-	void Serialize(ISerialize &Ar)override;
+	bool IsRoot() override { return false; }
+	void Serialize(ISerialize &Ar, unsigned int Ver) override;
+	unsigned int  GetVersion() override { return 0; }
 	bool IsDeletable() override { return false; }
 	bool Move(const kPoint &DeltaMove) { return false; }
 	ISuite *GetSuite() { return _Suite; }
@@ -24,7 +26,7 @@ public:
 	bool HitTest(const kVector3D &RayStart, const kVector3D &RayDir, ObjectID &OutSurfaceID, int *OutSectionIndex = nullptr, kVector3D *OutPosition = nullptr, kVector3D *OutNormal = nullptr) override;
 	int  GetSurfaceCount() override { return 0; }
 	class ISurfaceObject *GetSurfaceObject(int SurfaceIndex) override { return nullptr; }
-	IObjectDesc *GetDesc() override { return ClsDesc; }
+	IObjectDesc *GetDesc() override { return _ClsDesc; }
 	int GetNumberOfProperties() override;
 	IProperty *GetProperty(int Index) override;
 	IProperty *GetProperty(const char  *Name) override;
@@ -39,6 +41,10 @@ public:
 	IValue *FindValue(const char *name);
 	void SetValue(const char *name, IValue *value);
 	IValue *GetValueArray() override;
+	virtual void Update() {}
+	virtual void Delete();
+	virtual bool IsNeedUpdate() { return _bNeedUpdate; }
+	virtual void MarkNeedUpdate(EChannelMask Mask = EChannelAll) {}
 protected:
 	IValue *REG_GetPropertyValue(const char  *Name);
 	bool REG_SetPropertyValue(const char *Name, const IValue *Value);
@@ -46,11 +52,42 @@ protected:
 	void SerializeProperties(ISerialize &Ar);
 	void SerializeDictionary(ISerialize &Ar);
 	void GetProperties(std::vector<IProperty *> &Properties);
-	ObjectDesc	*ClsDesc;
+	ObjectDesc	*_ClsDesc;
 protected:
 	friend class		 FClassLibaray;
 	ObjectID			 _ID;
 	class ISuite		*_Suite;
+ 	bool				 _bNeedUpdate;
 	std::unordered_map<std::string, IValue *> _dictionary;
 };
+
+template<class T>
+inline void BeginChunk(ISerialize &Ar)
+{
+	int ChunkID = 0;
+	ObjectDesc *Desc = T::GetObjectDesc();
+	if (Desc)
+	{
+		if (Ar.IsLoading())
+		{
+			ChunkID = Ar.ReadChunk();
+		}
+		else if (Ar.IsSaving())
+		{
+			ChunkID = Desc->ObjectType;
+			Ar.WriteChunk(ChunkID);
+		}
+	}
+}
+
+template<class T>
+inline void EndChunk(ISerialize &Ar)
+{
+	ObjectDesc *Desc = T::GetObjectDesc();
+	if (Desc)
+	{
+		Ar.EndChunk(Desc->ObjectType);
+	}
+}
+
 

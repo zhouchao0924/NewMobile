@@ -49,11 +49,7 @@ UBuildingSystem::UBuildingSystem(const FObjectInitializer &ObjectIntializer)
 	: Super(ObjectIntializer)
 	, Suite(nullptr)
 	, Visitor(nullptr)
-	, DWHasLoad(false)
-
 {
-	/*static ConstructorHelpers::FClassFinder<AActor> PointLight(TEXT("Blueprint'/Game/Light/Editor_PointLight_Base.Editor_PointLight_Base_C'"));
-	UClass *PointLightClass = PointLight.Class;*/
 }
 //载入文本文件
 bool UBuildingSystem::LoadStringFromFile(FString& Contents, FString FullFilePath)
@@ -118,7 +114,7 @@ bool UBuildingSystem::LoadFile(const FString &InFilename)
 	{
 		Suite = pSDK->LoadSuite(strFilename);
 		if (Suite)
-		{
+		{	
 			Filename = InFilename;
 			Suite->SetListener(this);
 			LoadObjInfo();
@@ -188,7 +184,7 @@ void UBuildingSystem::AddToWorld(UObject *WorldContextObject)
 			for (TMap<int32, FObjectInfo>::TIterator It(ObjMap); It; ++It)
 			{
 				FObjectInfo &ObjInfo = It.Value();
-				//SpawnActorByObject(MyWorld, ObjInfo);
+				SpawnActorByObject(MyWorld, ObjInfo);
 			}
 			HostWorlds.Add(MyWorld);
 		}
@@ -297,7 +293,7 @@ void UBuildingSystem::OnAddObject(IObject *RawObj)
 				UWorld *World = (UWorld *)HostWorlds[i].Get(true);
 				if (World)
 				{
-					SpawnActorByObject(RawObj, World, *ObjInfo);
+					SpawnActorByObject(World, *ObjInfo);
 				}
 				else
 				{
@@ -414,7 +410,7 @@ void UBuildingSystem::OnUpdateObject(IObject *RawObj, unsigned int ChannelMask)
 }
 
 //根据Object的Type生成对应的部件
-ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FObjectInfo &ObjInfo)
+ADRActor *UBuildingSystem::SpawnActorByObject(UWorld *World, FObjectInfo &ObjInfo)
 {
 	ADRActor *pActor = nullptr;
 	IObject *Obj = ObjInfo.Data->GetRawObj();
@@ -427,18 +423,9 @@ ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FO
 		}
 		else if (Obj->IsA(EModelInstance))
 		{
-			pActor = SpawnModelComponent(RawObj, World, ObjInfo);
-			if (!DWHasLoad)
-			{
-				SpawnDWModelComponent(World, ObjInfo);
-			}
-		}
-		else
-		{
-			pActor = SpawnLightComponent(RawObj, World, ObjInfo);
+			pActor = SpawnModelComponent(World, ObjInfo);														
 		}
 	}
-
 	if (Visitor)
 	{
 		Visitor->OnCheckObjectVisible(ObjInfo);
@@ -446,89 +433,76 @@ ADRActor *UBuildingSystem::SpawnActorByObject(IObject *RawObj, UWorld *World, FO
 	return pActor;
 }
 
-void UBuildingSystem::SetADataList(const FADatac AData)
+//生成家具模型
+ADRActor * UBuildingSystem::SpawnModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
 {
-	if (Suite)
-	{
-		ADataList.Add(AData);
-	}
-}
-
-void UBuildingSystem::SetLightDataList(const FLightDatac LData)
-{
-	if (Suite)
-	{
-		LightDataList.Add(LData);
-	}
-}
-
-void UBuildingSystem::SetDWDataList(const FDWDatac DWData)
-{
-	if (Suite)
-	{
-		DWDataList.Add(DWData);
-	}
-}
-
-//生成ModelFile模型
-ADRActor * UBuildingSystem::SpawnModelComponent(IObject *RawObj, UWorld *MyWorld, FObjectInfo &ObjInfo)
-{
-	UBuildingData *Data = ObjInfo.Data;
 	FTransform Tra;
-	int n = 0;
-	for (int i = 0; i < ADataList.Num(); ++i)
-	{
-		int32 a = ADataList[i].ObjID;
-		int32 b = RawObj->GetID();
-		if (a == b)
-		{
-			Tra.SetScale3D(ADataList[i].Scale);
-			n = i;
-			break;
-		}
-	};
+	FRotator RR;
+	FVector Sca;
 
+	UBuildingData *Data = ObjInfo.Data;
+	IObject *Obj = Data->GetRawObj();
+
+	IValue* ModelData = Obj->FindValue("ModelID");
+	if (ModelData)
+	{
+		int32 ModelID = ModelData->IntValue();
+	}
+
+	IValue* RotXData = Obj->FindValue("RotX");
+	if (RotXData)
+	{
+		float RotX = RotXData->FloatValue();
+		RR.Roll = RotX;
+	}
+
+	IValue* RotYData = Obj->FindValue("RotY");
+	if (RotYData)
+	{
+		float RotY = RotYData->FloatValue();
+		RR.Pitch = RotY;
+	}
+
+	IValue* RotZData = Obj->FindValue("RotZ");
+	if (RotZData)
+	{
+		float RotZ = RotZData->FloatValue();
+		RR.Yaw = RotZ;
+	}
+
+	IValue* ScaXData = Obj->FindValue("ScaX");
+	if (ScaXData)
+	{
+		float ScaX = ScaXData->FloatValue();
+		Sca.X = ScaX;
+	}
+
+	IValue* ScaYData = Obj->FindValue("ScaY");
+	if (ScaYData)
+	{
+		float ScaY = ScaYData->FloatValue();
+		Sca.Y = ScaY;
+	}
+
+	IValue* ScaZData = Obj->FindValue("ScaZ");
+	if (ScaZData)
+	{
+		float ScaZ = ScaZData->FloatValue();
+		Sca.Z = ScaZ;
+	}
+	
+	FVector Location = Data->GetVector(TEXT("Loction"));		
+	Tra.SetLocation(Location);
+	Tra.SetScale3D(Sca);
+	
 	AModelFileActor *Actor = MyWorld->SpawnActor<AModelFileActor>(AModelFileActor::StaticClass(), Tra);
 	if (Actor)
 	{
 		Actor->Update(ObjInfo.Data);
-
-		FRotator RR;
-		RR.Pitch = ADataList[n].Rotation.Yaw;
-		RR.Yaw = ADataList[n].Rotation.Pitch;
-		RR.Roll = ADataList[n].Rotation.Roll;
 		Actor->SetActorRotation(RR);
-
 		ObjInfo.Actorts.Add(Actor);
 	}
 	return Actor;
-};
-
-//生成门窗模型
-void  UBuildingSystem::SpawnDWModelComponent(UWorld *MyWorld, FObjectInfo &ObjInfo)
-{
-	ADWActor *Actor = nullptr;
-	FTransform Tra;
-	for (int i = 0; i < DWDataList.Num(); ++i)
-	{
-		Tra.SetLocation(DWDataList[i].Loctioan);
-		Tra.SetScale3D(DWDataList[i].Scale);
-		ADWActor *Actor = MyWorld->SpawnActor<ADWActor>(ADWActor::StaticClass(), Tra);
-
-		if (Actor)
-		{			
-			Actor->Update(DWDataList[i].ResID);
-
-			FRotator RR;
-			RR.Pitch = DWDataList[i].Rotation.Yaw;
-			RR.Yaw = DWDataList[i].Rotation.Pitch;
-			RR.Roll = DWDataList[i].Rotation.Roll;
-			Actor->SetActorRotation(RR);
-
-			ObjInfo.Actorts.Add(Actor);
-		}
-	};
-	DWHasLoad = true;	
 };
 	
 //生成户型组件
@@ -546,44 +520,6 @@ ADRActor * UBuildingSystem::SpawnPrimitiveComponent(UWorld *MyWorld, FObjectInfo
 			WallComp->SetData(ObjInfo.Data);		
 		}
 		ObjInfo.Actorts.Add(Actor);
-	}
-	return Actor;
-}
-
-//生成灯光组件
-ADRActor *UBuildingSystem::SpawnLightComponent(IObject *RawObj,UWorld *MyWorld, FObjectInfo &ObjInfo)
-{
-	APointLightActor *Actor = nullptr;
-	if (LightDataList.Num()>0)
-	{
-		for (int i = 0; i < LightDataList.Num(); ++i)
-		{
-			int32 a = LightDataList[i].ObjID;
-			int32 b = RawObj->GetID();
-			if (a == b)
-			{	
-				if (LightDataList[i].Type == 1)
-				{
-					APointLightActor *Actor = (APointLightActor *)MyWorld->SpawnActor(APointLightActor::StaticClass(), &FTransform::Identity);
-					FVector Location = LightDataList[i].Location;
-					Actor->SetActorRelativeLocation(Location);
-
-					Actor->Update(ObjInfo.Data, LightDataList[i].SI);
-					ObjInfo.Actorts.Add(Actor);
-					break;
-				}
-				else
-				{
-					ASpotLightActor *Actor = (ASpotLightActor *)MyWorld->SpawnActor(ASpotLightActor::StaticClass(), &FTransform::Identity);
-					FVector Location = LightDataList[i].Location;
-					Actor->SetActorRelativeLocation(Location);
-
-					Actor->Update(ObjInfo.Data, LightDataList[i].SI);
-					ObjInfo.Actorts.Add(Actor);
-					break;
-				}				
-			}
-		};
 	}
 	return Actor;
 }
@@ -1014,7 +950,7 @@ bool UBuildingSystem::Move(ObjectID objID, const FVector2D &DeltaMove)
 	return false;
 }
 
-void UBuildingSystem::LoadingConfig(FBuildingConfig * Config)
+void UBuildingSystem::LoadingConfig(FBuildingConfig *Config)
 {
 	if (!Suite)
 	{

@@ -10,8 +10,7 @@ class DoorHole :public WallHole
 public:
 	DoorHole();
 	EObjectType GetType() { return EDoorHole; }
-	void Serialize(ISerialize &Ar);
-	void UpdateTransform(ModelInstance *pModel) override;
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	void SetModel(const std::string &Door, const std::string &DoorFrame, const std::string &DoorSone);
 	IValue *GetFunctionProperty(const std::string &name) override;
 	bool SetFunctionProperty(const std::string &name, const IValue *Value) override;

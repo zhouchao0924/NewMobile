@@ -62,6 +62,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Startup();
 
+	//归递查找文件
+	UFUNCTION(BlueprintCallable, Category = "ExtendedContent|File", meta = (DisplayName = "File Find Recursive"))
+	static TArray<FString> File_Find(FString InPath, FString InFilter, bool InFiles, bool InDirectory);
+
 	UFUNCTION()
 	void RequestHandler(UVaRestRequestJSON *JSONRequest);
 	void SetState(EState InState);

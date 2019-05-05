@@ -1,4 +1,4 @@
-
+﻿
 #include "Object.h"
 #include "PValue.h"
 #include "MXFile/MXTexture.h"
@@ -8,9 +8,10 @@ BEGIN_CLASS(Object)
 END_CLASS()
 
 Object::Object()
-	:_ID(INVALID_OBJID)
-	, ClsDesc(nullptr)
+	: _ID(INVALID_OBJID)
+	, _ClsDesc(nullptr)
 	, _Suite(nullptr)
+ 	, _bNeedUpdate(false)
 {
 }
 
@@ -21,7 +22,7 @@ bool Object::IsA(EObjectType Type)
 		return true;
 	}
 
-	ObjectDesc *Desc = ClsDesc ? ClsDesc->SuperClassDesc : nullptr;
+	ObjectDesc *Desc = _ClsDesc ? _ClsDesc->SuperClassDesc : nullptr;
 	while (Desc)
 	{
 		if (Desc->ObjectType == Type)
@@ -49,7 +50,7 @@ Object::~Object()
 
 void Object::GetAllDesc(std::vector<ObjectDesc*> &Descs, std::vector<int> &DescCounts)
 {
-	ObjectDesc *Desc = ClsDesc;
+	ObjectDesc *Desc = _ClsDesc;
 	while (Desc)
 	{
 		Descs.push_back(Desc);
@@ -175,7 +176,7 @@ bool Object::REG_SetPropertyValue(const char *Name, const IValue *Value)
 
 void Object::GetProperties(std::vector<IProperty *> &Properties)
 {
-	ObjectDesc *Desc = ClsDesc;
+	ObjectDesc *Desc = _ClsDesc;
 	while (Desc)
 	{
 		for (int i = 0; i < Desc->GetNumberOfProperty(); ++i)
@@ -246,23 +247,23 @@ void SaveValue(ISerialize &Ar, IValue *pValue)
 		}
 		case kV_IntArray:
 		{
-			std::vector<int> &intArray = pValue->IntArrayValue();
-			int Num = (int)intArray.size();
+			kArray<int> intArray = pValue->IntArrayValue();
+			int Num = intArray.size();
 			Ar << Num;
 			if (Num > 0)
 			{
-				Ar.Serialize(&(intArray[0]), Num * sizeof(int));
+				Ar.Serialize(intArray.data(), intArray.bytes());
 			}
 			break;
 		}
 		case kV_Vec2DArray:
 		{
-			std::vector<kPoint> &vec2Array = pValue->Vec2ArrayValue();
-			int Num = (int)vec2Array.size();
+			kArray<kPoint> vec2Array = pValue->Vec2ArrayValue();
+			int Num = vec2Array.size();
 			Ar << Num;
 			if (Num > 0)
 			{
-				Ar.Serialize(&(vec2Array[0]), Num * sizeof(kPoint));
+				Ar.Serialize(vec2Array.data(), vec2Array.bytes());
 			}
 			break;
 		}
@@ -304,42 +305,42 @@ IValue *LoadValue(EVarType VarType, ISerialize &Ar)
 	}
 	case kV_StdString:
 	{
-		std::string v;
+		static std::string v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
 	}
 	case kV_Vec3D:
 	{
-		kVector3D v;
+		static kVector3D v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
 	}
 	case kV_Vec2D:
 	{
-		kPoint v;
+		static kPoint v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
 	}
 	case kV_Rotator:
 	{
-		kRotation v;
+		static kRotation v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
 	}
 	case kV_Bounds:
 	{
-		kBox3D v;
+		static kBox3D v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
 	}
 	case kV_IntArray:
 	{
-		std::vector<int> intArray;
+		static std::vector<int> intArray;
 		int Num = 0;
 		Ar << Num;
 		intArray.resize(Num);
@@ -347,12 +348,12 @@ IValue *LoadValue(EVarType VarType, ISerialize &Ar)
 		{
 			Ar.Serialize(&intArray[0], Num * sizeof(int));
 		}
-		pValue = &GValueFactory->Create(&intArray);
+		pValue = &GValueFactory->Create(kArray<int>(intArray));
 		break;
 	}
 	case kV_Vec2DArray:
 	{
-		std::vector<kPoint> vec2Array;
+		static std::vector<kPoint> vec2Array;
 		int Num = 0;
 		Ar << Num;
 		vec2Array.resize(Num);
@@ -360,12 +361,12 @@ IValue *LoadValue(EVarType VarType, ISerialize &Ar)
 		{
 			Ar.Serialize(&vec2Array[0], Num * sizeof(int));
 		}
-		pValue = &GValueFactory->Create(&vec2Array);
+		pValue = &GValueFactory->Create(kArray<kPoint>(vec2Array));
 		break;
 	}
 	case kV_Plane:
 	{
-		kPlane3D v;
+		static kPlane3D v;
 		Ar << v;
 		pValue = &GValueFactory->Create(&v);
 		break;
@@ -377,7 +378,7 @@ IValue *LoadValue(EVarType VarType, ISerialize &Ar)
 
 void Object::SerializeProperties(ISerialize &Ar)
 {
-	if (ClsDesc)
+	if (_ClsDesc)
 	{
 		if (Ar.IsSaving())
 		{
@@ -430,7 +431,7 @@ void Object::SerializeDictionary(ISerialize &Ar)
 {
 	if (Ar.IsSaving())
 	{
-		std::unordered_map<std::string, IValue *> _dictionary;
+		//std::unordered_map<std::string, IValue *> _dictionary;
 		int num = _dictionary.size();
 		Ar << num;
 		for (std::unordered_map<std::string, IValue *>::iterator it = _dictionary.begin(); it != _dictionary.end(); ++it)
@@ -462,11 +463,14 @@ void Object::SerializeDictionary(ISerialize &Ar)
 	}
 }
 
-void Object::Serialize(ISerialize &Ar)
+void Object::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	Ar << _ID;
+	BeginChunk<Object>(Ar);
+	
 	SerializeProperties(Ar);
 	SerializeDictionary(Ar);
+
+	EndChunk<Object>(Ar);
 }
 
 bool Object::SaveTextureToFile(int iTex, const char *Filename)
@@ -507,7 +511,7 @@ bool Object::SaveTextureToFile(int iTex, const char *Filename)
 IValue *Object::FindValue(const char *name)
 {
 	if (name)
-	{
+	{	
 		std::unordered_map<std::string, IValue *>::iterator it = _dictionary.find(name);
 		if (it != _dictionary.end())
 		{
@@ -557,6 +561,11 @@ IValue *Object::GetValueArray()
 		return pValue;
 	}
 	return nullptr;
+}
+
+void Object::Delete()
+{
+	delete this;
 }
 
 struct FHitInfo

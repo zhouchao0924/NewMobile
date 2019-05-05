@@ -3,24 +3,31 @@
 #include "ISuite.h"
 #include "MXFile/MXFile.h"
 #include "Stream/FileStream.h"
+#include "TargetPlatform/PCPlatform.h"
+#include "TargetPlatform/AndroidPlatform.h"
 
 IValueFactory *GValueFactory = NULL;
 
-BuildingSDK::BuildingSDK()
+BuildingSDKImpl::BuildingSDKImpl()
 	:_bInitialized(false)
 	,_Transaction(nullptr)
 {
 }
 
-bool BuildingSDK::Initialize()
+bool BuildingSDKImpl::Initialize()
 {
 	_bInitialized = true;
+	
 	_Transaction = new FTransaction();
 	GValueFactory = &_ValueFactoy;
+
+	_Platforms.push_back(new PCPlatform());
+	_Platforms.push_back(new AndroidPlatform());
+
 	return true;
 }
 
-void BuildingSDK::UnInitialize()
+void BuildingSDKImpl::UnInitialize()
 {
 	for (size_t i = 0; i < _Suites.size(); ++i)
 	{
@@ -38,17 +45,17 @@ void BuildingSDK::UnInitialize()
 	}
 }
 
-ITransact *BuildingSDK::GetTransaction()
+ITransact *BuildingSDKImpl::GetTransaction()
 {
 	return _Transaction;
 }
 
-void BuildingSDK::SetTransaction(ITransact *InTransaction)
+void BuildingSDKImpl::SetTransaction(ITransact *InTransaction)
 {
 	_Transaction = InTransaction;
 }
 
-ISuite *BuildingSDK::CreateSuite()
+ISuite *BuildingSDKImpl::CreateSuite()
 {
 #if	!USE_MX_ONLY
 	if (_bInitialized)
@@ -61,7 +68,7 @@ ISuite *BuildingSDK::CreateSuite()
 	return nullptr;
 }
 
-void BuildingSDK::DestroySuite(ISuite *Suite)
+void BuildingSDKImpl::DestroySuite(ISuite *Suite)
 {
 #if !USE_MX_ONLY
 	SuiteImpl *SuiteImp = (SuiteImpl*)Suite;
@@ -80,47 +87,60 @@ void BuildingSDK::DestroySuite(ISuite *Suite)
 #endif
 }
 
-ISuite *BuildingSDK::LoadSuite(const char *Filename)
+ISuite *BuildingSDKImpl::LoadSuite(const char *Filename)
 {
 #if !USE_MX_ONLY
 	if (_bInitialized)
 	{
 		SuiteImpl *Suite = (SuiteImpl *)CreateSuite();
-		Suite->Load(Filename);
+
+		if (!Suite->Load(Filename))
+		{
+			DestroySuite(Suite);
+			Suite = nullptr;
+		}
+		
 		return Suite;
 	}
 #endif
 	return nullptr;
 }
 
-ISerialize *BuildingSDK::CreateFileWriter(const char *Filename)
+ISerialize *BuildingSDKImpl::CreateFileWriter(const char *Filename)
 {
 	return new FileWriter(Filename);
 }
 
-ISerialize *BuildingSDK::CreateFileReader(const char *Filename)
+ISerialize *BuildingSDKImpl::CreateFileReader(const char *Filename)
 {
 	return new FileReader(Filename);
 }
 
-IObject *BuildingSDK::LoadFile(const char *Filename)
+IObject *BuildingSDKImpl::LoadFile(const char *Filename)
 {
 	return MXFile::LoadFromFile(Filename);
 }
 
-IValueFactory *BuildingSDK::GetValueFactory()
+IValueFactory *BuildingSDKImpl::GetValueFactory()
 {
 	return &_ValueFactoy;
 }
 
-IImporter *BuildingSDK::GetImporter()
+ITargetPlatform *BuildingSDKImpl::GetPlatform(ETargetPlatform PlatformType)
 {
-	return &_Importer;
+	for (size_t i = 0; i < _Platforms.size(); ++i)
+	{
+		if (_Platforms[i]->GetPlatformType() == PlatformType)
+		{
+			return _Platforms[i];
+		}
+	}
+	return nullptr;
 }
 
 IBuildingSDK *GetBuildingSDK()
 {
-	static BuildingSDK sdk;
+	static BuildingSDKImpl sdk;
 	return  &sdk;
 }
 

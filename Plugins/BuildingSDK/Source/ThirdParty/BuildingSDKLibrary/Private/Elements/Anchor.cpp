@@ -6,48 +6,43 @@
 #include "Class/Property.h"
 
 BEGIN_DERIVED_CLASS(Anchor, BuildingObject)
-	ADD_PROP_READONLY(CornerID, IntProperty)
-	ADD_PROP_READONLY(LinkObjects, IntProperty)
+	ADD_PROP_READONLY(OwnerID, IntProperty)
+	ADD_PROP_READONLY(EditPoints, IntArrayProperty)
+	ADD_PROP_READONLY(LinkObjects, IntArrayProperty)
 END_CLASS()
 
 Anchor::Anchor()
+	:OwnerID(INVALID_OBJID)
 {
 }
 
-void Anchor::Serialize(ISerialize &Ar)
+void Anchor::Serialize(ISerialize &Ar, unsigned int Ver)
 {
-	BuildingObject::Serialize(Ar);
-}
-
-void Anchor::GetPins(std::vector<ObjectID> &OutPins)
-{
-	OutPins.push_back(CornerID);
+	BuildingObject::Serialize(Ar, Ver);
 }
 
 IValue *Anchor::GetFunctionProperty(const std::string &name)
 {
 	IValue *pValue = BuildingObject::GetFunctionProperty(name);
-	if (name == "Location")
-	{
-		kPoint Location = GetLocation();
-		pValue = &GValueFactory->Create(&Location, false);
-	}
-	else if (name == "Pins")
-	{
-		pValue = &GValueFactory->Create();
-		
-		std::vector<ObjectID> Pins;
-		GetPins(Pins);
 
-		for (size_t i = 0; i < Pins.size(); ++i)
+	if (!pValue)
+	{
+		if (name == "Location")
 		{
-			IValue *pID = &GValueFactory->Create(Pins[i]);
-			if (pID)
+			kPoint Location = GetCornerLocation();
+			pValue = &GValueFactory->Create(&Location, false);
+		}
+		else if (name == "CornerID")
+		{
+			ObjectID ID = INVALID_OBJID;
+			if (!EditPoints.empty())
 			{
-				pValue->AddField(*pID);
+				ID = EditPoints[0];
 			}
+			pValue = &GValueFactory->Create(ID);
 		}
 	}
+
 	return pValue;
 }
 
@@ -55,7 +50,7 @@ bool Anchor::SetFunctionProperty(const std::string &name, const IValue *Value)
 {
 	if (Value && name == "Location")
 	{
-		Corner *pCorner = SUITE_GET_BUILDING_OBJ(CornerID, Corner);
+		Corner *pCorner = SUITE_GET_BUILDING_OBJ(GetCorner(0), Corner);
 		if (pCorner)
 		{
 			pCorner->SetLocation(Value->Vec2Value());
@@ -65,14 +60,25 @@ bool Anchor::SetFunctionProperty(const std::string &name, const IValue *Value)
 	return false;
 }
 
-kPoint Anchor::GetLocation()
+kPoint Anchor::GetCornerLocation()
 {
-	Corner *pCorner = SUITE_GET_BUILDING_OBJ(CornerID, Corner);
+	Corner *pCorner = SUITE_GET_BUILDING_OBJ(GetCorner(0), Corner);
 	if (pCorner)
 	{
 		return pCorner->Location;
 	}
 	return kPoint();
+}
+
+bool Anchor::GetLocation(kVector3D &Location)
+{
+	Corner *pCorner = SUITE_GET_BUILDING_OBJ(GetCorner(0), Corner);
+	if (pCorner)
+	{
+		Location = pCorner->Location;
+		return true;
+	}
+	return false;
 }
 
 void Anchor::Link(ModelInstance *InModel)
@@ -93,7 +99,7 @@ void Anchor::Link(ModelInstance *InModel)
 	}
 }
 
-void Anchor::MarkNeedUpdate()
+void Anchor::Update() 
 {
 	for (size_t i = 0; i < LinkObjects.size(); ++i)
 	{
@@ -101,13 +107,18 @@ void Anchor::MarkNeedUpdate()
 		if (pModel)
 		{
 			UpdateTransform(pModel);
+			pModel->MarkNeedUpdate();
 		}
 	}
 }
 
 void Anchor::UpdateTransform(ModelInstance *pModel)
 {
-	pModel->Location = GetLocation();
+	kVector3D Location;
+	if (GetLocation(Location))
+	{
+		pModel->Location = Location;
+	}
 }
 
 void Anchor::UnLink(ModelInstance *InModel)
@@ -166,11 +177,34 @@ ModelInstance * Anchor::SetModelByType(int type, const std::string ResID)
 	return pModel;
 }
 
+ObjectID Anchor::GetCorner(int index)
+{
+	ObjectID ID = INVALID_OBJID;
+	if (!EditPoints.empty())
+	{
+		ID = EditPoints[0];
+	}
+	return ID;
+}
+
+void Anchor::SetCorner(int index, ObjectID InCornerID)
+{
+	if (index >= (int)EditPoints.size())
+	{
+		EditPoints.resize(index + 1);
+	}
+	EditPoints[index] = InCornerID;
+}
+
 void Anchor::OnDestroy()
 {
 	if (_Suite)
 	{
-		_Suite->DeleteObject(CornerID, true);
+		for (size_t i = 0; i < EditPoints.size(); ++i)
+		{
+			ObjectID ID = EditPoints[i];
+			_Suite->DeleteObject(ID, true);
+		}
 			
 		for (size_t i = 0; i < LinkObjects.size(); ++i)
 		{
@@ -178,9 +212,10 @@ void Anchor::OnDestroy()
 			_Suite->DeleteObject(ObjID, true);
 		}
 
-		CornerID = INVALID_OBJID;
+		EditPoints.size();
 		LinkObjects.clear();
 	}
+
 	BuildingObject::OnDestroy();
 }
 

@@ -25,17 +25,14 @@ enum EAreaType
 
 struct FWallHoleInfo
 {
-	FWallHoleInfo() { ObjType = EBuildingObject; MinX = MaxX = 0; HoleID = INVALID_OBJID; }
+	FWallHoleInfo() { ObjType = EBuildingObject; HoleID = INVALID_OBJID; }
 	FWallHoleInfo(ObjectID ID, float InMinX, float InMax, EObjectType InType)
 		:HoleID(ID)
-		,MinX(InMinX)
-		,MaxX(InMax)
 		,ObjType(InType)
 	{
 	}
 	void Serialize(ISerialize &Ar);
 	ObjectID HoleID;
-	float MinX, MaxX;
 	EObjectType ObjType;
 };
 
@@ -44,14 +41,14 @@ class Wall :public  Primitive
 	DEFIN_CLASS()
 public:
 	Wall();
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	bool IsDeletable() override { return true; }
 	void GetLocations(kPoint &P0, kPoint &P1);
 	kPoint GetForward();
 	kPoint GetRight();
 	void GetBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine);
 	void SetCorner(int CornerIndex, ObjectID NewCorner, std::vector<FWallHoleInfo> &OtherHoles);
-	void MarkNeedUpdate() override;
+	void Update() override;
 	kPoint GetDirection(ObjectID From);
 	ObjectID GetOtherCorner(ObjectID CornerID);
 	void OnCreate();
@@ -74,9 +71,12 @@ public:
 	virtual void CopyHoles(std::vector<FWallHoleInfo> &Holes) {}
 	virtual std::vector<FWallHoleInfo> *GetHoles() { return nullptr; }
 	virtual void AddHole(WallHole *pHole, const kPoint &Location, float InZPos, float InHeight, float InWidth) {}
+	virtual void UpdateHole(WallHole *pHole) {}
+	bool GetRange(ObjectID HoleID, float &OutMinX, float &OutMaxX);
 protected:
-	void BuildCaps();
-	void GetOriginalBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine);
+	virtual void BuildCaps();
+	virtual void BuildCaps2();
+	virtual void GetOriginalBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine);
 public:
 	ObjectID					P[2];
 	ObjectID					RoomLeft;
@@ -90,7 +90,9 @@ class VirtualWall :public Wall
 {
 	DEFIN_CLASS()
 public:
+	void BuildCaps() override;
 	EObjectType GetType() override { return EVirtualWall; }
+	void GetOriginalBorderLines(kLine &CenterLine, kLine &LeftLine, kLine &RightLine) override;
 };
 
 class SolidWall :public Wall
@@ -98,7 +100,7 @@ class SolidWall :public Wall
 	DEFIN_CLASS()
 public:
 	SolidWall();
-	void Serialize(ISerialize &Ar);
+	void Serialize(ISerialize &Ar, unsigned int Ver);
 	IValue *GetFunctionProperty(const std::string &name);
 	void Build() override;
 	void OnDestroy() override;
@@ -116,7 +118,8 @@ public:
 	void SetWallInfo(float InThickLeft, float InThickRight, float Height0, float Height1) override;
 	void CopyHoles(std::vector<FWallHoleInfo> &Holes) override;
 	std::vector<FWallHoleInfo> *GetHoles() override { return &Holes; }
-	void MarkNeedUpdate() override;
+	void Update() override;
+	void UpdateHole(WallHole *pHole) override;
 public:
 	float						ThickLeft;
 	float						ThickRight;
