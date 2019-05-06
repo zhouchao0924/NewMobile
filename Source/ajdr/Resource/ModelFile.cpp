@@ -1,8 +1,8 @@
-
+﻿
 #include "ajdr.h"
 #include "ModelFile.h"
-#include "ModelCompress.h"
-#include "ModelImporter.h"
+//#include "ModelCompress.h"
+//#include "ModelImporter.h"
 #include "ResourceMgr.h"
 #include "ResourceUtils.h"
 
@@ -317,7 +317,7 @@ void  UModelFile::Compress()
 		{
 			FModel *model = m_Models[i];
 			check(model != NULL);
-			CompressUtil::CompressModel(model);
+			//CompressUtil::CompressModel(model);
 		}
 		m_Header.bCompressed = 1;
 	}
@@ -427,10 +427,10 @@ void UModelFile::CheckResource()
 	for (int32 i = 0; i < m_Textures.Num(); ++i)
 	{
 		FModelTexture *tex = m_Textures[i];
-		if (tex && tex->Source.CompressedImages.Num() == 0)
+		/*if (tex && tex->Source.CompressedImages.Num() == 0)
 		{
 			CompressUtil::CompressTexture(tex);
-		}
+		}*/
 	}
 }
 
@@ -794,9 +794,9 @@ UTexture2D *UModelFile::SetMaterialSlotTexture(int32 MaterialIndex, int32 Textur
 		{
 			FTexSlotInfo &slotInfo = texSlots[TextureIndex];
 
-			UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
+			//UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
 
-			if (TexImporter)
+			/*if (TexImporter)
 			{
 				FTextureSourceInfo *pTexSourceInfo = TexImporter->ImportFromFile(this, GetSlotType(slotInfo.TexParamName), NewTexFile);
 				if (pTexSourceInfo)
@@ -820,7 +820,7 @@ UTexture2D *UModelFile::SetMaterialSlotTexture(int32 MaterialIndex, int32 Textur
 
 					MarkDirty();
 				}
-			}
+			}*/
 		}
 	}
 

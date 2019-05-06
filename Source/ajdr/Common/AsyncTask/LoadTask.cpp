@@ -1,10 +1,10 @@
-
+﻿
 #include "ajdr.h"
 #include "ResourceMgr.h"
 #include "LoadTask.h"
 #include "HttpModule.h"
 #include "ModelFile.h"
-#include "ModelImporter.h"
+//#include "ModelImporter.h"
 #include "Interfaces/IHttpRequest.h"
 
 FResLoadAsyncTask::FResLoadAsyncTask(UResource *Resource)

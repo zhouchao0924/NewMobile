@@ -1,10 +1,10 @@
-
+ï»¿
 #include "ajdr.h"
 #include "SurfaceFile.h"
 #include "DRGameMode.h"
 #include "ResourceUtils.h"
-#include "ModelCompress.h"
-#include "ModelImporter.h"
+//#include "ModelCompress.h"
+//#include "ModelImporter.h"
 #include "ResourceMgr.h"
 
 void USurfaceFile::FHeader::Serialize(FArchive &Ar)
@@ -106,7 +106,7 @@ UTexture2D * USurfaceFile::SetMaterialSlotTexture(int32 TextureIndex, const FStr
 	{
 		FTexSlotInfo &slotInfo = texSlots[TextureIndex];
 
-		UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
+		/*UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
 
 		if (TexImporter)
 		{
@@ -132,7 +132,7 @@ UTexture2D * USurfaceFile::SetMaterialSlotTexture(int32 TextureIndex, const FStr
 				Texture = tex->GetTexture();
 				MarkDirty();
 			}
-		}
+		}*/
 	}
 	return Texture;
 }
@@ -148,7 +148,7 @@ UTexture2D * USurfaceFile::GetSlotNTexture(int32 TextureIndex, const FString & N
 	{
 		FTexSlotInfo &slotInfo = texSlots[TextureIndex];
 
-		UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
+		/*UTextureImporter *TexImporter = ResMgr->GetTextureImporter();
 
 		if (TexImporter)
 		{
@@ -160,7 +160,7 @@ UTexture2D * USurfaceFile::GetSlotNTexture(int32 TextureIndex, const FString & N
 				Texture = tex->GetTexture();
 
 			}
-		}
+		}*/
 	}
 	return Texture;
 }
@@ -256,7 +256,7 @@ UTexture * USurfaceFile::GetMaterialPreviewImage(int32 SizeX, int32 SizeY)
 		if (mtrl)
 		{
 			UMaterialInterface *ue4Mtrl = mtrl->GetUE4Material();
-			//Ôö¼Ó¸ù¾Ý²ÄÖÊÀàÐÍ»ñÈ¡Ãû×Ö
+			//å¢žåŠ æ ¹æ®æè´¨ç±»åž‹èŽ·å–åå­—
 			if (mtrl->GetType() == EMaterialRef)
 			{
 				if (!ue4Mtrl)
@@ -631,10 +631,10 @@ void USurfaceFile::CheckResource()
 	for (int32 i = 0; i < m_Textures.Num(); ++i)
 	{
 		FModelTexture *tex = m_Textures[i];
-		if (tex && tex->Source.CompressedImages.Num() == 0)
+		/*if (tex && tex->Source.CompressedImages.Num() == 0)
 		{
 			CompressUtil::CompressTexture(tex);
-		}
+		}*/
 	}
 	Super::CheckResource();
 }

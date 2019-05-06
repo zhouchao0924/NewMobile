@@ -1,4 +1,4 @@
-
+﻿
 #include "ajdr.h"
 #include "ResAsyncTaskMgr.h"
 #include "HttpDownloadMgr.h"
@@ -11,7 +11,7 @@ FDRAsyncTaskManager &FDRAsyncTaskManager::Get()
 
 void FDRAsyncTaskManager::Tick(float DeltaTime)
 {
-	TickTasks<FImportAsyncTask>(QueueImportTasks);
+//	TickTasks<FImportAsyncTask>(QueueImportTasks);
 
 	TickTasks<FResLoadAsyncTask>(QueueLoadTasks);
 
@@ -26,7 +26,7 @@ void FDRAsyncTaskManager::Tick(float DeltaTime)
 
 void FDRAsyncTaskManager::Clear()
 {
-	ClearTasks<FImportAsyncTask>(QueueImportTasks);
+//	ClearTasks<FImportAsyncTask>(QueueImportTasks);
 	
 	ClearTasks<FResLoadAsyncTask>(QueueLoadTasks);
 

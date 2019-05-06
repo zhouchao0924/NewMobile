@@ -22,12 +22,12 @@ public class ajdr : ModuleRules
           "ImageWrapper",
           "NetworkFile",
           "HTTP",
-          "TextureCompressor",
+          //"TextureCompressor",
           "ImageCore",
           "FBX",
           "Json",
           "JsonUtilities",
-          "TargetPlatform",
+          //"TargetPlatform",
           "Sockets",
           "Networking",
           "BuildingSDK",
@@ -45,18 +45,11 @@ public class ajdr : ModuleRules
                Path.Combine(ModuleDirectory, "Common/Network"),
                Path.Combine(ModuleDirectory, "Common/AsyncTask"),
            }
-           );
+        );
 
         if (Target.Type == TargetRules.TargetType.Server || Target.Type == TargetRules.TargetType.Editor)
         {
-//          PublicDependencyModuleNames.Add("WebServer");
-//          PublicDependencyModuleNames.Add("UGW_WebPanoramaPlugin");
-//          AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
         }
-
-//      AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
-//      DynamicallyLoadedModuleNames.AddRange(new string[] { "eXiSoundVis" });
-//      DynamicallyLoadedModuleNames.AddRange(new string[] { "PeExtendedToolKit" });
 
         // Uncomment if you are using Slate UI
         PrivateDependencyModuleNames.AddRange(
@@ -78,16 +71,8 @@ public class ajdr : ModuleRules
                 }
             );
         }
-
-
         //PrivatePCHHeaderFile = "ajdr.h";
-
-        //"UGW_WebPanoramaPlugin",
-
-        // Uncomment if you are using online features
-        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
         PublicDefinitions.Add("BOOST_SYSTEM_NOEXCEPT");
         bEnableExceptions = true;
-        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
     }
 }

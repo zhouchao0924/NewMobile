@@ -1,11 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "ModelTexture.h"
 #include "ModelMaterial.h"
 #include "ResourceItem.h"
-#include "TextureCompressorModule.h"
+//#include "TextureCompressorModule.h"
 #include "ProceduralMeshComponent.h"
 
 #define SAFE_DELETE(p)     do { if(p) { delete (p); (p) = nullptr; } } while(0)

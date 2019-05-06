@@ -3,8 +3,8 @@
 #include "ResourceMgr.h"
 #include "ModelFile.h"
 #include "SurfaceFile.h"
-#include "ModelImporter.h"
-#include "ImportTask.h"
+//#include "ModelImporter.h"
+//#include "ImportTask.h"
 #include "LoadTask.h"
 #include "ProtocalTask.h"
 #include "ResAsyncTaskMgr.h"
@@ -32,7 +32,7 @@ UResourceMgr * UResourceMgr::s_Instance = NULL;
 
 UResourceMgr::UResourceMgr(const FObjectInitializer &ObjectInitializer)
 	: Super(ObjectInitializer)
-	, Importer(NULL)
+	//, Importer(NULL)
 	, bTickable(false)
 	, UpdateFileSystemTask(nullptr)
 {
@@ -134,41 +134,41 @@ USurfaceFile *UResourceMgr::NewSurface()
 	return Surface;
 }
 
-UModelImporter *UResourceMgr::GetImporter()
-{
-	if (!Importer)
-	{
-		Importer = NewObject<UModelImporter>();
-
-		if (!Importer->Initialize())
-		{
-			Importer->ConditionalBeginDestroy();
-			Importer = NULL;
-		}
-	}
-
-	return Importer;
-}
+//UModelImporter *UResourceMgr::GetImporter()
+//{
+//	if (!Importer)
+//	{
+//		Importer = NewObject<UModelImporter>();
+//
+//		if (!Importer->Initialize())
+//		{
+//			Importer->ConditionalBeginDestroy();
+//			Importer = NULL;
+//		}
+//	}
+//
+//	return Importer;
+//}
 
 UModelFile *UResourceMgr::AsyncLoadFBX(UModelFile *InUpdateModel, const FString &InFilename, UObject *WorldContextObject)
 {
 	UModelFile *ModelFile = NULL;
 	UResourceMgr *ResMgr = UResourceMgr::GetResourceMgr();
-	UModelImporter *Importer = ResMgr? ResMgr->GetImporter() : NULL;
+	//UModelImporter *Importer = ResMgr? ResMgr->GetImporter() : NULL;
 
-	if (Importer)
-	{
-		bool bTransient = InUpdateModel != NULL;
-		ModelFile = ResMgr->NewModel(bTransient);
-		if (bTransient)
-		{
-			ModelFile->SetResID(InUpdateModel->GetResID());
-		}
-		if (ModelFile)
-		{
-			FDRAsyncTaskManager::Get().QueueTask(new FAsyncTask<FImportAsyncTask>(ModelFile, InUpdateModel, Importer, InFilename));
-		}
-	}
+	//if (Importer)
+	//{
+	//	bool bTransient = InUpdateModel != NULL;
+	//	ModelFile = ResMgr->NewModel(bTransient);
+	//	if (bTransient)
+	//	{
+	//		ModelFile->SetResID(InUpdateModel->GetResID());
+	//	}
+	//	if (ModelFile)
+	//	{
+	//		FDRAsyncTaskManager::Get().QueueTask(new FAsyncTask<FImportAsyncTask>(ModelFile, InUpdateModel, Importer, InFilename));
+	//	}
+	//}
 
 	return InUpdateModel? InUpdateModel : ModelFile;
 }
@@ -725,22 +725,22 @@ UResource *UResourceMgr::Preload(const FString &Filename, bool bNeedHeader, bool
 	return Resource;
 }
 
-UTextureImporter *UResourceMgr::GetTextureImporter()
-{
-	UTextureImporter *Tex = NULL;
-
-	if (!Importer)
-	{
-		Importer = NewObject<UModelImporter>();
-	}
-
-	if (Importer)
-	{
-		Tex = Importer->GetTextureImporter();
-	}
-
-	return Tex;
-}
+//UTextureImporter *UResourceMgr::GetTextureImporter()
+//{
+//	UTextureImporter *Tex = NULL;
+//
+//	if (!Importer)
+//	{
+//		Importer = NewObject<UModelImporter>();
+//	}
+//
+//	if (Importer)
+//	{
+//		Tex = Importer->GetTextureImporter();
+//	}
+//
+//	return Tex;
+//}
 
 void UResourceMgr::UpdateModelsByCategory(const FName &Level1, const FName &Level2, const FName &Level3, TArray<int32> &Resources)
 {

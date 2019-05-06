@@ -1,4 +1,4 @@
-
+﻿
 #pragma once
 
 #include "Engine/EngineTypes.h"
@@ -122,8 +122,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DR|Resource")
 	bool RequestSkuid(FString &OutSkuid);
 
-	UFUNCTION(BlueprintCallable, Category = "DR|Resource")
-	UTextureImporter *GetTextureImporter();
+	//UFUNCTION(BlueprintCallable, Category = "DR|Resource")
+	//UTextureImporter *GetTextureImporter();
 
 	void ReleaseAll();
 
@@ -175,7 +175,7 @@ public:
 	void GetMaterialList(TArray<FMaterialListItem> &MaterialList, const FString &CategoryName, const FString &SeachName, bool bOther, bool bAll ,bool isbasesx=true);
 	void GetResourceList(TArray<UResource *> &ResourceList);
 protected:
-	UModelImporter *GetImporter();
+	//UModelImporter *GetImporter();
 	bool IsPreloadResFromFileSystem();
 	UResource *CreateResByType(EResType ResType);
 	void LoadRes(UResource *InResource);
@@ -199,8 +199,8 @@ public:
 	FOnResourceListChanged					ResourceListChanged;
 	UPROPERTY(Transient)
 	bool									bImportPreloadResource;
-	UPROPERTY(Transient)
-	UModelImporter							*Importer;
+	/*UPROPERTY(Transient)
+	UModelImporter							*Importer;*/
 	UPROPERTY(Transient)
 	TMap<FString, int32>					ResidResMap;
 	UPROPERTY(Transient)

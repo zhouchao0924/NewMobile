@@ -1,4 +1,4 @@
-
+﻿
 #pragma once
 
 #include "HAL/Runnable.h"
@@ -9,9 +9,9 @@
 #include "CookTask.h"
 #include "LoadTask.h"
 #include "UploadLoadTask.h"
-#include "ImportTask.h"
+//#include "ImportTask.h"
 
-class FImportAsyncTask;
+//class FImportAsyncTask;
 class FResLoadAsyncTask;
 class FUploadAsyncTask;
 class FDownloadAsyncTask;
@@ -35,10 +35,10 @@ public:
 	template<typename TTask>
 	void QueueTask(FAsyncTask<TTask> *Task);
 
-	template<> void QueueTask<FImportAsyncTask>(FAsyncTask<FImportAsyncTask> *pTask)
-	{
-		QueueImportTasks.Add(pTask);
-	}
+	//template<> void QueueTask<FImportAsyncTask>(FAsyncTask<FImportAsyncTask> *pTask)
+	//{
+	//	QueueImportTasks.Add(pTask);
+	//}
 	
 	template<> void QueueTask<FResLoadAsyncTask>(FAsyncTask<FResLoadAsyncTask> *pTask)
 	{
@@ -177,7 +177,7 @@ public:
 
 
 protected:
-	TArray<FAsyncTask<FImportAsyncTask> *>		QueueImportTasks;
+	//TArray<FAsyncTask<FImportAsyncTask> *>		QueueImportTasks;
 	TArray<FAsyncTask<FResLoadAsyncTask> *>		QueueLoadTasks;
 	TArray<FAsyncTask<FUploadAsyncTask> *>		QueueUploadTasks;
 	TArray<FAsyncTask<FCookAsyncTask> *>		QueueCookTasks;

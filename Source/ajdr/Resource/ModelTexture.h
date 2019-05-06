@@ -2,7 +2,7 @@
 #pragma once
 
 #include "IClass.h"
-#include "TextureCompressorModule.h"
+//#include "TextureCompressorModule.h"
 
 extern FString  GetTexSlotName(ETexSlot Slot);
 extern FString  GetTexSlotKey(ETexSlot Slot);
@@ -40,7 +40,7 @@ public:
 
 	void SetNum(int32 Num) { Data.SetNum(Num); }
 
-	TArray<FCompressedImage2D>	CompressedImages;
+//	TArray<FCompressedImage2D>	CompressedImages;
 	ETextureSourceFormat		SourceFormat;
 	TextureCompressionSettings	CompressionSettings;
 	int32						SizeX, SizeY;
