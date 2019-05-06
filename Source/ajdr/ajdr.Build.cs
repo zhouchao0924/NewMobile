@@ -57,22 +57,13 @@ public class ajdr : ModuleRules
             {
                 "Slate",
                 "SlateCore",
-                "TextureFormatDXT",
+                //"TextureFormatDXT",
                 "nvTextureTools",
                 "VHACD",
             }
         );
 
-        if (Target.bBuildEditor == true)//如果是编辑器
-        {
-            PrivateDependencyModuleNames.AddRange(
-                new string[]
-                {
-                }
-            );
-        }
-        //PrivatePCHHeaderFile = "ajdr.h";
-        PublicDefinitions.Add("BOOST_SYSTEM_NOEXCEPT");
-        bEnableExceptions = true;
+        //PublicDefinitions.Add("BOOST_SYSTEM_NOEXCEPT");
+        //bEnableExceptions = true;
     }
 }

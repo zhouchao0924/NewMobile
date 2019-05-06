@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+﻿// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "BuildingSDK.h"
 #include "Core.h"
@@ -50,7 +50,6 @@ IBuildingSDK *FBuildingSDKModule::GetSDK()
 #elif PLATFORM_MAC
 		LibraryPath = FPaths::Combine(*BaseDir, TEXT("Source/ThirdParty/BuildingSDKLibrary/Mac/Release/BuildingSDKLibrary.dylib"));
 #endif // PLATFORM_WINDOWS
-
 		BuildingSDKLibraryHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
 		if (BuildingSDKLibraryHandle)
 		{
